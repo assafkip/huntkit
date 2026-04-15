@@ -11,6 +11,118 @@ Not just a scraper wrapper. A full investigation workflow — from case intake t
 
 **Use it for:** OSINT, due diligence, threat intelligence, incident response, digital forensics, journalistic research, competitive intel, security research, CTF challenges.
 
+## How it works
+
+### Investigation lifecycle
+
+```mermaid
+flowchart LR
+    Start([New case]) --> NewCase[/q-new-case/]
+    NewCase --> Scope[/q-scope/]
+    Scope --> Begin[/q-begin/]
+
+    Begin --> Collect{Collection}
+    Collect --> Intake[/q-intake<br/>client docs/]
+    Collect --> OSINT[/q-osint<br/>platform-targeted/]
+    Collect --> Sweep[/q-collect<br/>broad sweep/]
+    Collect --> Target[/q-target<br/>profile/]
+
+    Intake --> Evidence[(EV-NNNN<br/>evidence items<br/>Wayback + archive.today<br/>+ Chrome PDF + SHA-256)]
+    OSINT --> Evidence
+    Sweep --> Evidence
+    Target --> Evidence
+
+    Evidence --> Analyze{Analysis}
+    Analyze --> Timeline[/q-timeline/]
+    Analyze --> Link[/q-link<br/>graph edges/]
+    Analyze --> ACH[/q-analyze<br/>Heuer's ACH/]
+    Analyze --> Challenge[/q-challenge<br/>red team/]
+    Analyze --> Reality[/q-reality-check/]
+
+    Timeline --> Report{Report}
+    Link --> Report
+    ACH --> Report
+    Challenge --> Report
+    Reality --> Report
+
+    Report --> Brief[/q-brief<br/>evidence-cited/]
+    Report --> Debrief[/q-debrief<br/>internal/]
+    Brief --> Export[/q-export/]
+    Debrief --> Export
+    Export --> End([Dossier delivered])
+
+    style Evidence fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style Start fill:#dbeafe,stroke:#2563eb
+    style End fill:#dcfce7,stroke:#16a34a
+```
+
+Every URL routes through `capture-evidence.sh`. Every finding cites `[EV-NNNN]`. Every claim has an A-F reliability grade.
+
+### Architecture
+
+```mermaid
+graph TB
+    subgraph Claude[Claude Code]
+        CC[/Claude Code session/]
+    end
+
+    subgraph huntkit[huntkit plugin]
+        direction TB
+        subgraph Skills
+            OSINT_S[osint<br/>6-phase workflow]
+            SA_S[structured-analysis<br/>Heuer's ACH + tradecraft primer]
+        end
+
+        subgraph Commands[22 commands]
+            CM[case mgmt]
+            CL[collection]
+            AN[analysis]
+            RP[reporting]
+        end
+
+        subgraph Rules[Enforced rules]
+            EC[evidence-capture-protocol]
+            QI[q-investigation]
+            TD[token-discipline]
+            SY[sycophancy]
+        end
+
+        subgraph Templates
+            NI[new-investigation]
+            SS[sec-stack-case]
+        end
+    end
+
+    subgraph MCP[Bundled MCP servers]
+        OI[osint-infra<br/>whois, dns, wayback]
+        TI[threat-intel<br/>VT, URLhaus, ThreatFox, crt.sh]
+    end
+
+    subgraph External[Optional external APIs]
+        PPL[Perplexity]
+        EXA[Exa]
+        TAV[Tavily]
+        APF[Apify<br/>55+ scrapers]
+        JIN[Jina]
+        BD[Bright Data]
+    end
+
+    subgraph Case[Case workspace]
+        EVD[(investigations/case/<br/>evidence/ findings/<br/>targets/ timelines/)]
+    end
+
+    CC --> huntkit
+    huntkit --> MCP
+    huntkit --> External
+    huntkit --> Case
+    Rules -.enforces.-> Commands
+    Commands -.uses.-> Skills
+
+    style Case fill:#fef3c7,stroke:#d97706
+    style MCP fill:#e0e7ff,stroke:#6366f1
+    style Rules fill:#fee2e2,stroke:#dc2626
+```
+
 ## What you get
 
 ### Skills
