@@ -1,0 +1,47 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+*-api-key.txt
+*-token.txt
+
+# Local MCP config (user-specific; copy from .mcp.json.template)
+.mcp.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Investigation artifacts (never commit case data)
+investigations/
+evidence/
+raw-collections/
+output/
+*.docx
+*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,13 @@
+{
+  "name": "claude-osint",
+  "version": "0.1.0",
+  "description": "OSINT investigation plugin for Claude Code. Structured person/domain research with 55+ scrapers, 7 search APIs, and bundled MCP servers for infrastructure recon and threat intel.",
+  "author": {
+    "name": "assafkip",
+    "url": "https://github.com/assafkip"
+  },
+  "homepage": "https://github.com/assafkip/claude-osint",
+  "repository": "https://github.com/assafkip/claude-osint",
+  "license": "MIT",
+  "keywords": ["osint", "investigation", "threat-intel", "claude-code", "mcp"]
+}

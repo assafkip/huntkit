@@ -1,0 +1,13 @@
+[project]
+name = "threat-intel-mcp"
+version = "0.1.0"
+description = "Threat intelligence MCP server for Claude Code -- VirusTotal, URLhaus, ThreatFox, crt.sh"
+requires-python = ">=3.10"
+dependencies = ["mcp[cli]>=1.0.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
