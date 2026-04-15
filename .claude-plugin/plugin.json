@@ -1,13 +1,29 @@
 {
-  "name": "claude-osint",
-  "version": "0.1.0",
-  "description": "OSINT investigation plugin for Claude Code. Structured person/domain research with 55+ scrapers, 7 search APIs, and bundled MCP servers for infrastructure recon and threat intel.",
+  "name": "huntkit",
+  "version": "0.2.0",
+  "description": "Investigation toolkit for Claude Code. Case management, OSINT, structured analytic techniques (Heuer / CIA tradecraft primer), chain-of-custody evidence capture, and bundled MCP servers for infrastructure recon and threat intel.",
   "author": {
     "name": "assafkip",
     "url": "https://github.com/assafkip"
   },
-  "homepage": "https://github.com/assafkip/claude-osint",
-  "repository": "https://github.com/assafkip/claude-osint",
+  "homepage": "https://github.com/assafkip/huntkit",
+  "repository": "https://github.com/assafkip/huntkit",
   "license": "MIT",
-  "keywords": ["osint", "investigation", "threat-intel", "claude-code", "mcp"]
+  "keywords": [
+    "osint",
+    "threat-intel",
+    "threat-hunting",
+    "investigation",
+    "case-management",
+    "structured-analysis",
+    "ach",
+    "tradecraft",
+    "evidence-capture",
+    "chain-of-custody",
+    "digital-forensics",
+    "claude-code",
+    "mcp",
+    "anthropic",
+    "agent-skills"
+  ]
 }

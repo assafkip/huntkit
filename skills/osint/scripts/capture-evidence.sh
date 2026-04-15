@@ -160,7 +160,7 @@ fi
 echo "[2/4] archive.today..."
 # archive.today returns a Refresh header pointing at the archived page on success
 AT_RESP=$(curl -sSL -I -X POST "https://archive.ph/submit/?url=$(printf '%s' "$URL" | jq -sRr @uri)" \
-  -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) claude-osint/0.1" 2>&1 || echo "")
+  -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) huntkit/0.2" 2>&1 || echo "")
 AT_REFRESH=$(echo "$AT_RESP" | grep -i '^refresh:' | sed 's/.*url=//I' | tr -d '\r\n' || true)
 AT_LOC=$(echo "$AT_RESP" | grep -i '^location:' | awk '{print $2}' | tr -d '\r\n' || true)
 ARCHIVE_TODAY_URL="${AT_REFRESH:-$AT_LOC}"
