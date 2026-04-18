@@ -173,10 +173,25 @@ APIFY_TOKEN=$APIFY_API_TOKEN node scripts/run_actor.js \
 
 ### LinkedIn
 
-LinkedIn actors are volatile on Apify. Current primary:
-- `supreme_coder~linkedin-profile-scraper` via `apify.sh linkedin` → $0.005/profile
-- Fallback: `brightdata.sh scrape` (always works, higher cost)
-- If primary fails: `bash scripts/apify.sh store-search "linkedin scraper"`
+LinkedIn actors are volatile on Apify. Run both in sequence for full coverage:
+
+1. **Profile:** `harvestapi/linkedin-profile-scraper` → $0.004/profile, ⭐ 4.71, 99.9% success, includes email extraction. Primary.
+2. **Posts:** `harvestapi/linkedin-profile-posts` → $0.002/post, ⭐ 4.91, 99.9% success. Pull recent posts for psychoprofile — formal writing style, topics, engagement patterns.
+
+```bash
+# Profile + contact info
+bash scripts/run-actor.sh "harvestapi/linkedin-profile-scraper" '{"profileUrls": ["https://linkedin.com/in/TARGET"]}'
+
+# Posts (psychoprofile signal — formal voice)
+bash scripts/run-actor.sh "harvestapi/linkedin-profile-posts" '{"profileUrls": ["https://linkedin.com/in/TARGET"], "maxPosts": 20}'
+```
+
+- Fallback if harvestapi fails: `dev_fusion/Linkedin-Profile-Scraper` → $0.01/profile, 50K users, also includes email
+- Last resort: `brightdata.sh scrape` (always works, higher cost)
+- If all fail: `bash scripts/apify.sh store-search "linkedin scraper"`
+- If the profile URL exists but fields are hidden: stop treating this as scraper failure. Pivot to `site:linkedin.com/posts` discovery, scrape the company/coworker post URLs you find, and use those posts to establish employer/title context.
+
+> Legacy: `supreme_coder~linkedin-profile-scraper` (was primary, now superseded — lower user base)
 
 ---
 

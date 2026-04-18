@@ -284,7 +284,56 @@ The main agent is the coordinator — it does NOT scrape itself.
 **Rate limiting:** wait 1s between Brave queries, 2s between Jina calls.
 Do NOT hammer APIs in tight loops — stagger parallel launches.
 
+## Phase 1.6: Manual Google Verification (MANDATORY — do not skip)
+
+⚠️ **`WebSearch` runs on Brave, not Google. Google's LinkedIn index is 20-40% deeper.
+Profiles invisible to all automated tools are routinely findable in seconds via Google.
+This step is required before launching Phase 2 swarm agents.**
+
+Ask the investigator to open a browser and run the following searches in Google.
+Paste any profile URLs or snippet text found directly into the chat before Phase 2 begins.
+
+```
+1. linkedin.com [first] [last]
+2. linkedin.com "[first] [last]" [city] OR [province/state]
+3. "[first] [last]" site:linkedin.com
+4. "[first] [last]" [employer or industry if known] linkedin
+5. "[first] [last]" [spouse or known associate] linkedin
+6. facebook.com "[first] [last]" [city]
+7. instagram.com "[first] [last]"
+8. "[first] [last]" [city] [province] (add -site:[known namesake domain] if namesakes exist)
+9. "[first] [last]" resume OR CV OR portfolio OR "about me"
+10. "[first] [last]" [any known employer] staff OR team OR directory OR bio
+```
+
+**On receiving results:**
+- Any LinkedIn URL → immediately scrape with `run-actor.sh "harvestapi/linkedin-profile-scraper"`
+- Any Facebook/Instagram URL → scrape with appropriate Apify actor
+- Google snippet showing name + title + employer (even without a URL) → record as Grade B fact
+- Namesake hits → document and exclude with evidence
+
+**LinkedIn lock fallback (MANDATORY):**
+- If a LinkedIn URL resolves but the profile content is locked, sparse, or auth-walled, do **not** mark employer unknown yet.
+- Immediately pivot to third-party LinkedIn evidence using Google and Bright Data:
+  - `site:linkedin.com/posts "<first> <last>"`
+  - `site:linkedin.com/posts "<first> <last>" company`
+  - `site:linkedin.com/posts "<first> <last>" conference OR summit OR booth OR team`
+  - `site:linkedin.com/in "<first> <last>" "<city>" company`
+  - `site:linkedin.com "<first> <last>" "<known associate>" company`
+- Capture company posts, coworker farewell posts, event recaps, team photos, and attendee lists that name the target.
+- If 2+ independent LinkedIn/company/coworker sources name the target with the same employer, record employer as confirmed/probable per source quality.
+- Only conclude `employer unknown` after this fallback path is exhausted and logged.
+
+**Stopping rule:** if the investigator reports all 10 searches returned no new URLs, record as
+confirmed-negative (Grade A absence) and proceed to Phase 2 with that noted.
+
 ## Phase 1.5: Internal Intelligence (Optional)
+
+⚠️ **EXPLICIT CONFIRMATION REQUIRED before executing this phase.**
+Even with broad research authorization, internal sources (email, Teams, Telegram, CRM) are
+categorically different from public OSINT. Before touching any internal source, stop and ask:
+*"I have access to [source]. Do you want me to include it as internal intelligence?"*
+Never auto-execute against live email or chat systems.
 
 **Before going external, check what you already know.** This phase is optional and applies
 only when you have local/internal sources that may contain relevant history on the target:
@@ -340,7 +389,8 @@ Read `references/platforms.md` ONLY when needing URL patterns or extraction sign
 
 Tool priority (primary → fallback). **If primary fails, switch immediately. Never retry same tool.**
 
-- LinkedIn: `apify.sh linkedin` → `brightdata.sh scrape` → `jina.sh read`
+- LinkedIn profile + email: `run-actor.sh "harvestapi/linkedin-profile-scraper"` → `run-actor.sh "dev_fusion/Linkedin-Profile-Scraper"` → `brightdata.sh scrape`
+- LinkedIn posts (psychoprofile): `run-actor.sh "harvestapi/linkedin-profile-posts"` (last 20 posts = formal voice sample) → `jina.sh read` profile page
 - Instagram: `apify.sh instagram` → `brightdata.sh scrape`
 - Instagram deep: `run-actor.sh "apify/instagram-tagged-scraper"` (who tags them), `apify/instagram-comment-scraper` (sentiment)
 - Facebook personal: `brightdata.sh scrape` → none (only Bright Data works)
@@ -349,12 +399,22 @@ Tool priority (primary → fallback). **If primary fails, switch immediately. Ne
 - TikTok discovery: `run-actor.sh "clockworks/tiktok-user-search-scraper"` (find by keywords)
 - YouTube: `run-actor.sh "streamers/youtube-channel-scraper"` → `jina.sh read` → `brightdata.sh scrape`
 - Telegram channels: `web_fetch t.me/s/{channel}` → `jina.sh read`
-- Twitter/X: `python3 scripts/twitter.py tweet <url>` → `jina.sh read`
+- Twitter/X: `uv run scripts/twitter.py tweet <url>` → `jina.sh read`
 - Google Maps (businesses): `run-actor.sh "compass/crawler-google-places"`
 - Contact enrichment: `run-actor.sh "vdrmota/contact-info-scraper"` (extract emails/phones from any URL)
 - Any site: `jina.sh read` → `brightdata.sh scrape`
 
 **run-actor.sh** = universal Apify runner (embedded, 55+ actors). See `references/tools.md` for full actor catalog.
+
+**Locked LinkedIn fallback:**
+- If the profile URL is found but title/employer fields are hidden, pivot from first-party profile scraping to third-party discovery before scoring the career dimension.
+- Search for:
+  - company LinkedIn posts naming the target
+  - coworker/manager farewell posts mentioning the target
+  - conference/event posts listing booth staff, speakers, or attendees
+  - company team pages, office pages, and staff directories tied to the same employer
+- Treat repeated employer mentions across these sources as stronger evidence than a blank or locked profile shell.
+- Record the profile itself as "confirmed URL, content locked" rather than "no LinkedIn found."
 
 Read `references/tools.md` ONLY when troubleshooting a failed tool.
 

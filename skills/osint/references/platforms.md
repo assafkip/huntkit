@@ -4,6 +4,15 @@
 
 **Extract:** headline, positions (title, company, duration, description), education, summary, skills, location, pronouns, follower/connection count.
 
+**If the profile is locked or sparse:**
+- Do not stop at the profile shell.
+- Search for third-party evidence on LinkedIn:
+  - company posts naming the person
+  - coworker posts tagging or thanking them
+  - conference/event posts listing booth staff, attendees, or speakers
+  - company office/team pages tied to the same name + geography
+- A locked profile URL plus multiple third-party employer mentions is often enough to confirm current employer even when the profile itself hides the fields.
+
 **Finding profiles - URL patterns to try:**
 - /in/firstnamelastname
 - /in/firstname-lastname
@@ -13,12 +22,14 @@
 **Search patterns:**
 - Brave: `site:linkedin.com "First Last" company`
 - Parallel: `"First Last" LinkedIn profile company city`
+- Google fallback: `site:linkedin.com/posts "First Last"` and `site:linkedin.com/posts "First Last" company`
 
 **Key signals:**
 - Gaps between positions = career breaks
 - "Co-founder" vs "Founder" vs "Partner" = different ownership levels
 - Location changes between roles = relocation history
 - Short tenures (<1yr) = fired, bad fit, or stepping stone
+- Repeated co-mentions in company/event posts = strong employer evidence even when the profile is private
 
 ## Instagram
 
