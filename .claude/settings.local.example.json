@@ -1,0 +1,12 @@
+{
+  "env": {
+    "VIRUSTOTAL_API_KEY": "your-virustotal-api-key",
+    "ABUSECH_AUTH_KEY": "your-abusech-auth-key",
+    "APIFY_TOKEN": "your-apify-token",
+    "APIFY_API_TOKEN": "your-apify-token",
+    "PERPLEXITY_API_KEY": "your-perplexity-api-key"
+  },
+  "permissions": {
+    "allow": []
+  }
+}

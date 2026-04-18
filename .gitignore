@@ -10,6 +10,7 @@ credentials.json
 
 # Local MCP config (user-specific; copy from .mcp.json.template)
 .mcp.json
+.claude/settings.local.json
 
 # Python
 .venv/
