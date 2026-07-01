@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"${CLAUDE_PLUGIN_ROOT}/.q-system/token-guard.py\" && python3 \"${CLAUDE_PLUGIN_ROOT}/.q-system/token-guard.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"${CLAUDE_PLUGIN_ROOT}/skills/osint/scripts/findings-verify-hook.py\" && python3 \"${CLAUDE_PLUGIN_ROOT}/skills/osint/scripts/findings-verify-hook.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

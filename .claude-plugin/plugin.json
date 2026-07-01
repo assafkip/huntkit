@@ -1,6 +1,6 @@
 {
   "name": "huntkit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Investigation toolkit for Claude Code. Case management, OSINT, structured analytic techniques (Heuer / CIA tradecraft primer), chain-of-custody evidence capture, and bundled MCP servers for infrastructure recon and threat intel.",
   "author": {
     "name": "assafkip",

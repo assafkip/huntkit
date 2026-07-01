@@ -250,9 +250,25 @@ For:
 
 Do not use on private individuals without consent, for harassment, doxxing, or stalking. You are responsible for compliance with local laws and platform terms of service.
 
+## Provenance & sync
+
+huntkit is built from a live investigation practice. The commands, skills, and
+rules here are the same files running real cases daily, synced automatically on
+every upstream change through a build script that anonymizes case references
+and gates the publish behind a client-indicator blocklist plus a gitleaks
+secret scan. Case-specific tooling and client data never leave the source repo.
+
+Enforcement hooks ship wired since v0.3.0 (`hooks/hooks.json`): a token-bleed
+circuit breaker (PreToolUse) and a findings-attribution gate that blocks a
+CONFIRMED/HIGH-CONFIDENCE finding citing an identifier still marked UNVERIFIED
+(PostToolUse). Installing the plugin activates both; no manual settings edits.
+
 ## Contributing
 
-Issues and PRs welcome. Backward-compatible additions preferred.
+Issues and PRs welcome. Backward-compatible additions preferred. Note that
+synced paths (`commands/`, `skills/`, `rules/`, `.q-system/`, `mcp-servers/`)
+are overwritten by the upstream sync; PRs against them are best raised as
+issues so the change lands upstream first.
 
 ## For LLM agents
 
