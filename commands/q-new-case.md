@@ -4,7 +4,7 @@ Arguments: $ARGUMENTS (case name, e.g. "stolen-ip-acme" or "harassment-jane-doe"
 
 ## Steps
 
-1. Ask the user for:
+1. Ask the founder for:
    - Case name (short slug, used in folder name)
    - Brief description of the investigation
    - Client name (if applicable)
@@ -15,7 +15,7 @@ Arguments: $ARGUMENTS (case name, e.g. "stolen-ip-acme" or "harassment-jane-doe"
    ```
 4. Update the scope.md template with the case description and today's date
 5. Create the memory/sessions/ directory
-6. Confirm the new case folder to the user
+6. Confirm the new case folder to the founder
 7. Suggest running `/q-scope` to fully define the investigation parameters
 
 The case folder is now the working directory for all investigation commands. Update the active case pointer so all `/q-*` commands know which case to operate on.

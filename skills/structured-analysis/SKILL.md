@@ -29,19 +29,19 @@ Flags combine: `/analyze --guided --no-osint` is valid.
 
 ## Q Investigation System Integration
 
-This skill is integrated into the Q investigation system..
+This skill is integrated into the huntkit investigation system.
 
 ### Output Path Override
 
 **All analysis output goes inside the active case folder**, not the project root.
 
-When an active case exists (e.g., `investigations/case-001-slug/`), replace every reference to `analyses/{{ANALYSIS_ID}}/` with:
+When an active case exists (e.g., `investigations/case-001-example/`), replace every reference to `analyses/{{ANALYSIS_ID}}/` with:
 
 ```
 investigations/<active-case>/output/analyses/{{ANALYSIS_ID}}/
 ```
 
-If no active case is identified, ask the user which case this analysis belongs to.
+If no active case is identified, ask the founder which case this analysis belongs to.
 
 ### Evidence Integration -- Tier 2 Local Files
 
@@ -60,7 +60,7 @@ This is the richest local evidence available. Prioritize it over generic file di
 After any `/analyze` run completes, update the active case:
 1. Add key findings to `investigation/findings/` (with citation back to the analysis)
 2. Update `memory/investigation-state.md` with analysis summary and which techniques were run
-3. If the analysis surfaced new collection gaps, flag them in `investigation-state.md` and suggest `/q-scope` to the user (file authority: `canonical/` is only updated via `/q-scope`)
+3. If the analysis surfaced new collection gaps, flag them in `investigation-state.md` and suggest `/q-scope` to the founder (file authority: `canonical/` is only updated via `/q-scope`)
 
 ### OSINT Note
 

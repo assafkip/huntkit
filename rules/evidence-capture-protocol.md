@@ -1,17 +1,17 @@
-# Evidence Capture Protocol
+# Evidence Capture Protocol (ENFORCED, all investigations)
 
-This rule governs how evidence enters any investigation run with this plugin. It's non-negotiable because post-hoc screenshot dumps break chain of custody.
+This rule governs how evidence enters any investigation under `investigations/`. It is non-negotiable. The founder approved this protocol on 2026-04-09 after identifying that post-hoc screenshot dumps break chain of custody.
 
 ## Core principle
 
-**Every piece of evidence gets captured at the time of collection, not after.** Reports reference evidence by stable ID, with the screenshot rendered inline. No report writer should ever be responsible for "going back to capture screenshots" — that step is already done.
+**Every piece of evidence gets captured at the time of collection, not after.** Reports must reference evidence by stable ID, with the screenshot rendered inline. No report writer should ever be responsible for "going back to capture screenshots" because that step is already done.
 
 ## Folder format
 
 Every evidence item lives in its own folder under the active case:
 
 ```
-investigations/<case>/evidence/items/EV-NNNN-<slug>/
+investigations/<case>/investigation/evidence/items/EV-NNNN-<slug>/
   source.json              # capture metadata + integrity hashes (REQUIRED)
   chain-of-custody.md      # who/when/how (REQUIRED)
   content.md               # transcription + OCR notes (REQUIRED stub)
@@ -19,7 +19,7 @@ investigations/<case>/evidence/items/EV-NNNN-<slug>/
   capture.png              # PNG rendering for inline embedding (REQUIRED for URL-sourced items)
 ```
 
-The `EV-NNNN` ID is zero-padded four digits, assigned by `skills/osint/scripts/next-ev-id.sh`, monotonic per case. Never reuse an ID. Never renumber.
+The EV-NNNN ID is zero-padded four digits, assigned by `skills/osint/scripts/next-ev-id.sh`, monotonic per case. Never reuse an ID. Never renumber.
 
 ## The one command that creates evidence
 
@@ -29,7 +29,7 @@ bash skills/osint/scripts/capture-evidence.sh <url> <slug> \
 ```
 
 This script:
-1. Assigns the next `EV-NNNN`
+1. Assigns the next EV-NNNN
 2. Submits to Wayback Machine
 3. Submits to archive.today
 4. Runs Chrome headless to produce `capture.pdf` + `capture.png`
@@ -42,11 +42,11 @@ If any of steps 2-5 fail, the item is marked `INCOMPLETE` in `source.json` and t
 
 ## SCREENSHOT_ONLY evidence class
 
-For client-provided evidence where the original URL is lost (e.g., a PDF a client emailed you), use this structure:
+For client-provided evidence where the original URL is lost (e.g., the Sowell PDF the client gave us on 2026-04-09), use this structure:
 
 ```
 items/EV-NNNN-<slug>/
-  original.pdf (or .png/.jpg)     # the artifact provided
+  original.pdf (or .png/.jpg)     # the artifact the client gave us
   source.json                     # {"type": "screenshot_only", "provided_by": "<who>", ...}
   chain-of-custody.md             # received-from, received-date, hash of original
   content.md                      # transcription + OCR
@@ -59,7 +59,7 @@ Set `"type": "screenshot_only"` in `source.json`. Reports can cite these items b
 All findings, briefs, and reports reference evidence by ID:
 
 ```markdown
-At 2:46 AM on <date>, @<handle> posted "<quoted text>." [EV-0014]
+At 2:46 AM Mar 14, @ohmstone posted "There are 9243 reasons why Brad sucks." [EV-0014]
 ```
 
 Before delivery, run:
@@ -73,25 +73,27 @@ This resolves `[EV-NNNN]` citations to inline PNG embeds + footnote metadata. It
 ## Forbidden patterns
 
 - Do not create a `screenshots/` dump folder alongside a report. That pattern is deprecated.
-- Do not reference evidence by filename (e.g., "see image4.png"). Always use the `EV-NNNN` ID.
+- Do not reference evidence by filename (e.g., "see image4.png"). Always use the EV-NNNN ID.
 - Do not cite an INCOMPLETE item in a report.
 - Do not modify `source.json` after capture. Chain of custody depends on its immutability.
-- Do not delete an `EV-NNNN` folder even if the evidence turns out to be irrelevant. Mark it superseded in `content.md` instead.
+- Do not delete an EV-NNNN folder even if the evidence turns out to be irrelevant. Mark it superseded in `content.md` instead.
 - Do not bypass `capture-evidence.sh` to "save time." The script enforces the protocol.
 
 ## When the script fails
 
 Fail-stop rule applies. If `capture-evidence.sh` fails:
 1. Stop collection immediately.
-2. Tell the user what broke (which step failed, what URL).
+2. Tell the founder what broke (which step failed, what URL).
 3. Wait for instructions before continuing.
 
 Common failure modes:
-- Wayback rate limits (they throttle aggressive submitters) — back off, space requests
-- archive.today captchas on new submissions — may require manual fallback
-- Chrome headless blocked by a paywall or login wall — the PDF will be the login page; mark INCOMPLETE and flag
-- URL redirects to a 404 or deleted page — archive still useful; mark INCOMPLETE if Chrome can't render
+- Wayback rate limits (they throttle aggressive submitters) -- back off, space requests
+- archive.today captchas on new submissions -- may require manual fallback
+- Chrome headless blocked by a paywall or login wall -- the PDF will be the login page; mark INCOMPLETE and flag
+- URL redirects to a 404 or deleted page -- archive still useful; mark INCOMPLETE if Chrome can't render
 
 ## Enforcement
 
-Any time an OSINT command (`/q-collect`, `/q-osint`, and any custom extensions) touches evidence, it must route through `capture-evidence.sh` for URL-sourced items. Raw OCR/extraction of user-provided files still happens through existing extraction scripts but the output must land in an `EV-NNNN-<slug>` folder with `source.json` type set to `screenshot_only` (or `document` for non-screenshot docs).
+Any new investigation case gets the `investigation/evidence/items/` directory scaffolded automatically via `templates/new-investigation/`. The template includes a `README.md` pointing at this protocol.
+
+Any time a Q command (`/q-collect`, `/q-osint`, `/q-intake`, `/q-brief`, `/q-export`) touches evidence, it must route through `capture-evidence.sh` for URL-sourced items. Raw OCR/extraction of client-provided files still happens through existing extraction scripts but the output must land in an `EV-NNNN-<slug>` folder with `source.json` type set to `screenshot_only` (or `document` for non-screenshot docs).

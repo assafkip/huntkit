@@ -96,7 +96,7 @@ Core themes run first so that if Batch 2 encounters errors (rate limits, tool fa
 
 **Error handling per batch**: Each subagent writes to its own file independently. If any subagent in a batch fails, the others still succeed. Failed themes are logged and can be retried in the sufficiency gate retry cycle.
 
-For each theme, invoke the Agent tool with `subagent_type: "general-purpose"` and the following prompt template. Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{THEME_NAME}}`, `{{THEME_NUMBER}}`, `{{THEME_SLUG}}`, `{{SEARCH_INSTRUCTIONS}}`, `{{PROBLEM_SUMMARY}}`, and `{{SOURCE_COUNT}}`:
+For each theme, invoke the Agent tool with `subagent_type: "general-purpose"`, `model: "haiku"`, and the following prompt template. (Haiku is sufficient for templated OSINT collection — search, scrape, write to file. Do not override unless the orchestrator explicitly flags this theme as requiring deeper synthesis.) Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{THEME_NAME}}`, `{{THEME_NUMBER}}`, `{{THEME_SLUG}}`, `{{SEARCH_INSTRUCTIONS}}`, `{{PROBLEM_SUMMARY}}`, and `{{SOURCE_COUNT}}`:
 
 ```
 You are an OSINT evidence collector. Your task:
@@ -137,7 +137,7 @@ Use this file format:
 
 After all raw files are on disk, spawn background Agent subagents in parallel (`run_in_background: true`) — one per theme. Each reads its raw file (no MCP tools needed) and extracts structured evidence.
 
-For each theme, invoke the Agent tool with `subagent_type: "general-purpose"`, `run_in_background: true`, and this prompt template. Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{THEME_NAME}}`, `{{THEME_NUMBER}}`, and `{{THEME_SLUG}}`:
+For each theme, invoke the Agent tool with `subagent_type: "general-purpose"`, `run_in_background: true`, `model: "haiku"`, and this prompt template. (Haiku is sufficient for structured extraction — read raw file, format per template. Synthesis happens later in Phase A on the parent model.) Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{THEME_NAME}}`, `{{THEME_NUMBER}}`, and `{{THEME_SLUG}}`:
 
 ```
 You are an evidence extraction processor. Your task:

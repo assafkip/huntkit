@@ -1,15 +1,15 @@
 Run targeted OSINT collection on a specific platform.
 
-Read `skills/osint/SKILL.md` for actor IDs and tool usage, then execute the platform-specific steps.
+Read `skills/osint/SKILL.md` for actor IDs and tool usage, then execute the /q-osint steps from `.q-system/commands.md`.
 
-Supported platforms: `linkedin`, `instagram`, `facebook`, `reddit`, `x`, `tiktok`, `youtube`, `domain`, `email`, `telegram`, `username`, `sweep`
+Supported platforms: linkedin, instagram, facebook, reddit, x, tiktok, youtube, domain, email, telegram, username, sweep
 
-Additional tools beyond the OSINT skill scripts (install separately if needed):
-- Telegram: `tgspyder <target> --members --chats` (https://github.com/Darksight-Analytics/tgspyder)
+Additional tools beyond the OSINT skill scripts:
+- Telegram: `tgspyder <target> --members --chats` or `tgspyder --user <username>`
 - Username search: `maigret <username> --json investigations/<case>/evidence/maigret-<username>.json`
-- Google/email: `ghunt email <address> --json investigations/<case>/evidence/ghunt-<address>.json`
+- Google/Email: `ghunt email <address> --json investigations/<case>/evidence/ghunt-<address>.json`
 
 All results must be saved to `investigations/<case>/evidence/` and relevant target profiles updated.
-Tag source reliability using the A-F scale from `skills/osint/SKILL.md`.
+Tag source reliability using the A-F scale from `.q-system/preflight.md`.
 
 Argument: $ARGUMENTS (required: platform and target, e.g. "linkedin https://linkedin.com/in/someone")

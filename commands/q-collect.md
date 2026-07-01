@@ -1,14 +1,18 @@
-Run a broad OSINT collection sweep across all applicable platforms for the current target.
+Plan or execute OSINT collection activities.
 
-Read `skills/osint/SKILL.md` for the full tool catalog and escalation flow.
+Read `skills/osint/SKILL.md` for full tool catalog, then execute the /q-collect steps from `.q-system/commands.md`.
 
-1. Read any existing `canonical/collection-plan.md` for outstanding requirements
+1. Read `canonical/collection-plan.md` for outstanding requirements
 2. Read `memory/investigation-state.md` for what's been collected
-3. Launch parallel first-volley searches (Perplexity, Brave, Tavily, Exa) via `skills/osint/scripts/first-volley.sh`
-4. Merge results with `skills/osint/scripts/merge-volley.sh`
-5. Capture new evidence through `skills/osint/scripts/capture-evidence.sh` — see `rules/evidence-capture-protocol.md`
-6. Update `memory/investigation-state.md` with findings
+3. Identify highest-priority collection gaps
+4. For each gap, suggest: what to collect, platform/source, tool/method, expected yield, Energy tag + Time Est
+5. Present as choices, not commands
+6. When founder brings back data, process via /q-intake
 
-OSINT scripts live at `skills/osint/scripts/<name>.sh`. Run `bash skills/osint/scripts/diagnose.sh` to check which APIs are configured.
+Available tools:
+- OSINT scripts: `bash skills/osint/scripts/<name>.sh`
+- TGSpyder: `tgspyder <target> --members --chats`
+- Maigret: `maigret <username>`
+- GHunt: `ghunt email <address>`
 
-Argument: $ARGUMENTS (optional: target name or case slug; defaults to the active case)
+Argument: $ARGUMENTS (optional: specific platform or target to collect on)

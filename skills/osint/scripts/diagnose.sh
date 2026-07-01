@@ -84,25 +84,31 @@ fi
 [ -f "$SKILL_DIR/scripts/run-actor.sh" ] && echo "  ✅ run-actor.sh (bash wrapper)" || echo "  ❌ run-actor.sh"
 echo ""
 
-# 3. Internal Intelligence Tools (optional)
-echo "📱 Internal Intelligence (optional):"
-if command -v tgspyder &>/dev/null; then
-  echo "  ✅ tgspyder (Telegram recon CLI)"
+# 3. Internal Intelligence Tools
+echo "📱 Internal Intelligence:"
+if [ -f "$WORKSPACE/skills/telegram/scripts/tg.py" ]; then
+  echo "  ✅ tg.py (Telegram history/search)"
 else
-  echo "  ⚪ tgspyder not installed (optional — https://github.com/Darksight-Analytics/tgspyder)"
+  echo "  ❌ tg.py (no Telegram access)"
 fi
 
-if command -v himalaya &>/dev/null || command -v mutt &>/dev/null || command -v notmuch &>/dev/null; then
-  echo "  ✅ local email CLI detected"
+if command -v himalaya &>/dev/null || [ -f ~/.local/bin/himalaya ]; then
+  echo "  ✅ himalaya (email search)"
 else
-  echo "  ⚪ no local email CLI detected (optional)"
+  echo "  ❌ himalaya (no email access)"
 fi
 
-if [ -n "${INTERNAL_NOTES_DIR:-}" ] && [ -d "$INTERNAL_NOTES_DIR" ]; then
-  NOTES_COUNT=$(find "$INTERNAL_NOTES_DIR" -name "*.md" 2>/dev/null | wc -l)
-  echo "  ✅ internal notes dir ($NOTES_COUNT files at \$INTERNAL_NOTES_DIR)"
+if [ -d "$WORKSPACE/vault/crm" ]; then
+  VAULT_COUNT=$(find "$WORKSPACE/vault/crm" -name "*.md" 2>/dev/null | wc -l)
+  echo "  ✅ vault/crm ($VAULT_COUNT cards)"
 else
-  echo "  ⚪ INTERNAL_NOTES_DIR not set (optional — point at a local CRM/vault dir)"
+  echo "  ❌ vault/crm (no CRM vault)"
+fi
+
+if [ -f "$WORKSPACE/scripts/twitter.py" ]; then
+  echo "  ✅ twitter.py (X/Twitter reader)"
+else
+  echo "  ❌ twitter.py (no Twitter access)"
 fi
 echo ""
 
@@ -139,7 +145,7 @@ echo "📊 Capabilities:"
 [ -n "${EXA_API_KEY:-}" ] && echo "  Semantic search (Exa): ✅" || echo "  Semantic search (Exa): ❌"
 [ -n "${EXA_API_KEY:-}" ] && echo "  People/Company search (Exa): ✅" || echo "  People/Company search (Exa): ❌"
 ([ -n "${PARALLEL_API_KEY:-}" ] || [ -f "$WORKSPACE/scripts/parallel-api-key.txt" ]) && echo "  AI search (Parallel): ✅" || echo "  AI search (Parallel): ❌"
-command -v tgspyder &>/dev/null && echo "  Telegram intel (tgspyder): ✅" || echo "  Telegram intel (tgspyder): ⚪ optional"
-(command -v himalaya &>/dev/null || command -v mutt &>/dev/null || command -v notmuch &>/dev/null) && echo "  Email intel (local CLI): ✅" || echo "  Email intel: ⚪ optional"
+[ -f "$WORKSPACE/skills/telegram/scripts/tg.py" ] && echo "  Telegram intel: ✅" || echo "  Telegram intel: ❌"
+(command -v himalaya &>/dev/null || [ -f ~/.local/bin/himalaya ]) && echo "  Email intel: ✅" || echo "  Email intel: ❌"
 echo ""
 echo "=== END DIAGNOSTIC ==="

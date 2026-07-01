@@ -23,7 +23,7 @@ The report generator runs in two phases to keep full artifact content out of the
 
 ### Phase A Subagent Prompt
 
-The orchestrator dispatches Phase A using the Agent tool with `subagent_type: "general-purpose"` and this prompt. Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{SKILL_DIR}}`, and `{{ITERATION_CONTEXT}}`:
+The orchestrator dispatches Phase A using the Agent tool with `subagent_type: "general-purpose"`, `model: "opus"`, and this prompt. (Phase A is cross-technique synthesis + Layer 2 self-critique — the heaviest reasoning step in the skill. Pinned to Opus regardless of parent model so analysis quality stays consistent.) Substitute ALL `{{VARIABLES}}` with their resolved values -- including `{{ANALYSIS_DIR}}`, `{{SKILL_DIR}}`, and `{{ITERATION_CONTEXT}}`:
 
 ```
 You are a structured analysis report synthesizer. Your task:
@@ -58,7 +58,7 @@ After the Phase A subagent returns:
 1. Read `{{ANALYSIS_DIR}}/working/review-summary.md`
 2. Execute Step 4 (Human Review Gate) using the summary data
 3. If user provides feedback:
-   - Dispatch a revision subagent with: the feedback text, path to report.md, and instruction to apply edits and rewrite
+   - Dispatch a revision subagent (Agent tool, `subagent_type: "general-purpose"`, `model: "haiku"`) with: the feedback text, path to report.md, and instruction to apply edits and rewrite. Haiku is sufficient because the synthesis was already done in Phase A — the revision subagent only applies user-specified edits.
    - After revision subagent returns, re-read review-summary.md if quality score changed
 4. If no feedback: proceed
 5. Execute Step 6 (Present Results) — use summary data for the conversation output
@@ -86,7 +86,7 @@ After the analysis is finalized, feed key results back into the Q investigation 
 3. **Flag collection gaps for `/q-scope`** (if the analysis surfaced new gaps):
    - Do NOT write to `canonical/collection-plan.md` directly (file authority: canonical/ only updated via `/q-scope`)
    - Instead, add new collection gaps to `memory/investigation-state.md` under a "Pending collection updates (from /analyze)" section
-   - Present the gaps to the user and suggest: "Run `/q-scope` to formally add these to the collection plan"
+   - Present the gaps to the founder and suggest: "Run `/q-scope` to formally add these to the collection plan"
 
 ---
 

@@ -3,54 +3,54 @@
 
 ---
 
-**Contacts and socials**
+**контакты и соцсети**
 - telegram: {handle} {status}
 - linkedin: {url} {status}
 - instagram: {handle} {status}
 - facebook: {url} {status}
 - email: {email} {status}
-- phone: {phone} {status}
-- other: {any_other}
+- телефон: {phone} {status}
+- другое: {any_other}
 
 ---
 
-**Biography**
+**биография**
 
-- date of birth: {dob_only_if_confirmed_A_or_B}
-- age: {age}
-- birthplace: {birthplace}
-- education: {education}
+- дата рождения: {dob_only_if_confirmed_A_or_B}
+- возраст: {age}
+- место рождения: {birthplace}
+- образование: {education}
 
-**Career:**
+**карьера:**
 - **{year}** — {role}, {company} ({age_at_time})
 - **{year}** — {role}, {company}
 - ...
-- **now** — {current_role}, {current_company}
+- **сейчас** — {current_role}, {current_company}
 
-Career pattern: {career_pattern_description}
-
----
-
-**Current situation**
-- role: {current_role}
-- company: {current_company} — {company_description}
-- location: {current_location}
+паттерн карьеры: {career_pattern_description}
 
 ---
 
-**Internal intelligence** 🔒
-*Section based on local sources (e.g., Telegram history, email, prior correspondence) — not for external sharing. Omit if no internal sources used.*
+**текущая ситуация**
+- роль: {current_role}
+- компания: {current_company} — {company_description}
+- локация: {current_location}
 
-- communication style: {formal_informal_emoji_patterns}
-- topics: {what_they_discuss_ask_about}
-- rhythm: {response_speed_active_hours_language}
-- relationship context: {cold_warm_hot_business_personal}
-- mentioned connections: {colleagues_partners_from_conversations}
+---
+
+**из переписки** 🔒
+*секция на основе Telegram/email — не для внешнего использования*
+
+- характер общения: {formal_informal_emoji_patterns}
+- темы: {what_they_discuss_ask_about}
+- стиль: {response_speed_active_hours_language}
+- контекст отношений: {cold_warm_hot_business_personal}
+- упомянутые люди: {colleagues_partners_from_conversations}
 - {any_deal_terms_pricing_discussed}
 
 ---
 
-**Psychoprofile**
+**психопрофиль**
 
 **MBTI: {type} ({confidence})**
 - E/I: {assessment} — {evidence}
@@ -58,59 +58,59 @@ Career pattern: {career_pattern_description}
 - T/F: {assessment} — {evidence}
 - J/P: {assessment} — {evidence}
 
-**Communication style:**
-- voice: {voice_description}
-- rhythm: {rhythm_description}
-- emoji: {emoji_pattern}
-- formal vs informal delta: {delta_between_linkedin_and_telegram}
-- key markers: {markers}
+**стиль коммуникации:**
+- голос: {voice_description}
+- ритм: {rhythm_description}
+- эмодзи: {emoji_pattern}
+- формальный vs неформальный: {delta_between_linkedin_and_telegram}
+- ключевые маркеры: {markers}
 
-**Values (deduced from actions):**
+**ценности (по действиям):**
 - {value_1}
 - {value_2}
 - {value_3}
 
 ---
 
-**Personal**
-- family: {family_only_confirmed}
-- pets: {pets_only_confirmed}
-- hobbies: {hobbies}
-- lifestyle: {lifestyle}
+**личное**
+- семья: {family_only_confirmed}
+- питомцы: {pets_only_confirmed}
+- увлечения: {hobbies}
+- стиль жизни: {lifestyle}
 
 ---
 
-**Observations**
+**наблюдения**
 - {observation_1_contradictions_or_patterns}
 - {observation_2}
 - {observation_3}
 
 ---
 
-**Confidence map**
-- A (confirmed, 2+ sources): {list_of_A_facts}
-- B (probable, 1 credible source): {list_of_B_facts}
-- C (inferred, indirect evidence): {list_of_C_facts}
-- D (unverified): {list_of_D_facts}
+**карта достоверности**
+- A (подтверждено, 2+ источника): {list_of_A_facts}
+- B (вероятно, 1 надёжный источник): {list_of_B_facts}
+- C (выведено, косвенные данные): {list_of_C_facts}
+- D (не подтверждено): {list_of_D_facts}
 
 ---
 
-**Entry points**
+**точки входа**
 - {approach_1_shared_connections_or_topics}
 - {approach_2}
 - {approach_3}
 
 ---
 
-**Gaps**
+**пробелы**
 - {gap_1_what_not_found}
 - {gap_2}
 
 ---
 
-**Metrics**
+**метрики**
 - depth score: {score}/10
 - coverage: {passed}/{total} checks
-- sources: {source_count} ({source_types_list})
-- internal intelligence used: {yes_no_what_checked}
-- total spend: ${total_cost}
+- источников: {source_count} ({source_types_list})
+- внутренняя разведка: {yes_no_what_checked}
+- потрачено: ${total_cost}

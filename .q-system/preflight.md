@@ -39,7 +39,7 @@ Full toolkit at `skills/osint/SKILL.md` with 55+ Apify actors and 7 search APIs.
 
 **Typical flow:** Collect first (`/q-osint`), then analyze (`/analyze --no-osint`).
 
-**Active case:** Reads from `./.active-case` (written by `/q-begin` and `/q-new-case`).
+**Active case:** Reads from `.active-case` (written by `/q-begin` and `/q-new-case`).
 
 **Required env vars (at least one search API needed):**
 - `APIFY_API_TOKEN` -- social media scraping (free tier ~$5/mo)
@@ -105,3 +105,23 @@ Use this scale for all evidence and sources:
 4. Check what's changed since last session
 5. Pick up highest-priority thread
 6. At session end, run `/q-checkpoint`
+
+---
+
+## 6. Step Zero: Web Search FIRST (NON-NEGOTIABLE)
+
+**Before running any Apify actor, scraper, or cross-platform search:**
+
+Run a plain web search on the handle, display name, and any aliases. Google AI Overviews, news articles, and personal bios frequently resolve the primary question in seconds.
+
+```bash
+# Via Perplexity MCP (preferred):
+# perplexity search mode: "who runs @[handle]" and "[handle] instagram operator"
+
+# Via WebSearch tool:
+# "[handle] instagram who is" and "[handle] site:instagram.com"
+```
+
+**Why this is Step Zero:** In case-036, a Google search of the Instagram handle returned a Google AI Overview naming the operator in the first sentence. The investigation had already run 117-post scrapes, cross-platform searches, and multiple dead-end leads before the handle was Googled. All of that was avoidable.
+
+**Rule:** If a web search resolves the primary question, move to verification -- do NOT proceed to heavy collection. Platform scraping is for when the web pass comes up empty.

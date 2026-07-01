@@ -5,8 +5,8 @@ This is a mid-investigation health check. Do NOT skip steps.
 ## Steps
 
 1. Read `canonical/scope.md` for hypotheses
-2. Read ALL files in `investigation/findings/`
-3. Read `investigation/evidence/` index (list files, read key ones)
+2. Read ALL files in `investigations/<case>/findings/`
+3. Read `investigations/<case>/evidence/` index (list files, read key ones)
 4. Read `memory/investigation-state.md` for current assessment
 
 ## For each hypothesis, answer:
@@ -30,10 +30,10 @@ This is a mid-investigation health check. Do NOT skip steps.
 
 ## Output
 
-Write to `investigation/findings/CHALLENGE-YYYY-MM-DD.md` with:
+Write to `investigations/<case>/findings/CHALLENGE-YYYY-MM-DD.md` with:
 - Each hypothesis: current confidence, revised confidence (if changed), and why
 - Top 3 weakest assumptions that need testing
 - Recommended collection to test (not confirm) the weakest assumptions
 - Tag each recommended action with Energy + Time Est
 
-Present the challenge to the user as choices, not commands.
+Present the challenge to the founder as choices, not commands.

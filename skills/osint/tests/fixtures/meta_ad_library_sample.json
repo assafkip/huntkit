@@ -1,0 +1,16 @@
+{
+  "data": {
+    "ad_library_main": {
+      "adArchiveID": "1234567890",
+      "page_id": "99887766",
+      "page_name": "Haiyi Plants",
+      "ad_delivery_status": "active",
+      "ad_delivery_start_time": "2025-09-12",
+      "snapshot_url": "https://www.facebook.com/ads/library/?id=1234567890",
+      "creative": {
+        "body": "Rare cat face flower seeds. Limited garden offer.",
+        "link_url": "https://haiyiplants.example/products/cat-face-flower"
+      }
+    }
+  }
+}

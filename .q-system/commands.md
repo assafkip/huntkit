@@ -12,7 +12,7 @@ Last updated: 2026-04-03
 1. Ask for case name (short slug) and brief description
 2. Generate case ID: `case-NNN-{slug}` (increment from highest existing)
 3. Copy `templates/new-investigation/` to `investigations/case-NNN-{slug}/`
-4. Write the new case folder name to `./.active-case`
+4. Write the new case folder name to `.active-case`
 5. Update scope.md with case description and today's date
 6. Suggest running `/q-scope` to define full parameters
 
@@ -23,8 +23,8 @@ Last updated: 2026-04-03
 **Purpose:** Load all context for a case before starting work.
 
 **Steps:**
-1. Identify active case (if multiple, ask the user)
-2. Write the active case folder name (e.g., `case-005-ask_reddit_icp`) to `./.active-case` so other commands and `/analyze` can resolve it without asking
+1. Identify active case (if multiple, ask the founder)
+2. Write the active case folder name (e.g., `case-001-example`) to `.active-case` so other commands and `/analyze` can resolve it without asking
 3. Read in parallel: scope.md, collection-plan.md, investigation-state.md, last-handoff.md
 4. Read preflight.md
 5. Check for existing analyses in `output/analyses/` -- list any with their status (complete/in-progress) and last technique run
@@ -83,7 +83,7 @@ Last updated: 2026-04-03
 **Purpose:** Set or update the investigation's scope, hypotheses, and collection requirements.
 
 **Steps:**
-1. Ask the user to describe the investigation (target, question, context)
+1. Ask the founder to describe the investigation (target, question, context)
 2. Define:
    - **Primary question:** What are we trying to answer?
    - **Targets:** People, entities, domains, accounts to investigate
@@ -93,7 +93,7 @@ Last updated: 2026-04-03
 3. Write to `canonical/scope.md`
 4. Create initial target files in `investigation/targets/`
 5. Create initial collection plan in `canonical/collection-plan.md`
-6. Confirm with user
+6. Confirm with founder
 
 ---
 
@@ -140,10 +140,27 @@ Last updated: 2026-04-03
 
 **Purpose:** Plan collection activities or process collected data.
 
+**STEP ZERO (NON-NEGOTIABLE -- runs before anything else):**
+Web-search every target handle, display name, and known alias before any Apify actor or platform scrape. Google AI Overviews, news articles, and personal bios frequently resolve the primary question in seconds. If a web search resolves the question, move to verification -- skip heavy collection.
+
+```bash
+# Perplexity search mode -- run both:
+# "who runs @[handle]"
+# "[display name] [platform] operator"
+```
+
+Scar: case-036 -- 117 posts scraped and multiple dead-end platform searches run before a basic Google search named the operator in the AI Overview. All of it was avoidable.
+
+**GATE CHECK (blocking):** Before executing deep collection, verify:
+- Does `investigation/findings/CHALLENGE-*.md` exist? If NO -- run `/q-challenge` first.
+- Has `/q-client-questions` been run this case? If NO -- run it first and wait for founder response.
+Both gates must be cleared before collection proceeds past the initial sweep.
+
 **Steps:**
-1. Read `canonical/collection-plan.md` for outstanding requirements
-2. Read `memory/investigation-state.md` for what's been collected
-3. Identify highest-priority collection gaps
+1. **Step Zero:** Web-search target handle and display name (see above). If primary question is resolved, go to verification.
+2. Read `canonical/collection-plan.md` for outstanding requirements
+3. Read `memory/investigation-state.md` for what's been collected
+4. Identify highest-priority collection gaps
 4. For each gap, suggest:
    - What to collect
    - Where to collect it (platform, source)
@@ -151,7 +168,7 @@ Last updated: 2026-04-03
    - Expected yield
    - Energy tag + Time Est
 5. Present as choices, not commands
-6. When the user brings back data, process via `/q-intake`
+6. When founder brings back data, process via `/q-intake`
 
 **OSINT Toolkit:** Read `skills/osint/SKILL.md` for full tool catalog, actor IDs, and escalation flow.
 
@@ -192,7 +209,12 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
 
 ## /q-osint [platform] [target] -- Platform-Specific Collection
 
-**Purpose:** Run targeted OSINT collection on a specific platform. Uses the OSINT skill's scripts and actors.
+**Purpose:** Run targeted OSINT collection on a specific platform. Uses the OSINT script library and actors.
+
+**GATE CHECK (blocking):** Before running any platform collection:
+- Does `investigation/findings/CHALLENGE-*.md` exist? If NO -- run `/q-challenge` first.
+- Has `/q-client-questions` been run? If NO and initial sweep is complete -- run it first.
+Any account found via platform collection is T3 (hypothesis only) until crosslinked to a T1 source (paid database). Do not write it to findings as confirmed until that crosslink exists.
 
 **Before first use:** Run `bash skills/osint/scripts/diagnose.sh` to check available tools.
 
@@ -293,7 +315,7 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
    - Alternative explanations
 7. Update `investigation/findings/` with new assessments
 8. Update collection plan with new requirements
-9. Present analysis to user
+9. Present analysis to founder
 
 ---
 
@@ -329,7 +351,7 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
    - Gaps (periods with no data)
    - Temporal correlations between targets
    - Sequence patterns (A always happens before B)
-5. Present timeline to user
+5. Present timeline to founder
 6. Flag periods that need more collection
 
 ---
@@ -337,6 +359,13 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
 ## /q-brief -- Generate Investigation Brief
 
 **Purpose:** Produce a structured summary of current investigation state.
+
+**GATE CHECK (blocking) -- ALL THREE must pass before brief generation:**
+1. Does `investigation/findings/CHALLENGE-*.md` exist? If NO -- run `/q-challenge` first.
+2. Has `/q-client-questions` been run and responses received? If NO -- stop.
+3. Does `output/analyses/` contain a premortem analysis? If NO -- run `/analyze premortem` first.
+
+If any gate fails, tell the founder which gate is missing and what to run. Do not generate the brief.
 
 **Steps:**
 1. Read scope, all targets, all findings, timeline
@@ -351,7 +380,7 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
    - **Recommended next steps:** Prioritized by impact, tagged with Energy + Time Est
 3. **PDF screenshot pass:** Compile all URLs referenced in the brief. Capture full-page PDF of each using GO FULL PAGE Chrome extension. Save to `output/briefs/screenshots/`.
 4. Save to `output/briefs/brief-YYYY-MM-DD.md`
-5. Present to user
+5. Present to founder
 
 ---
 
@@ -376,7 +405,7 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
 **Purpose:** Extract structured findings from a conversation, interview, document, or source.
 
 **Steps:**
-1. Ask user to describe or paste the source material
+1. Ask founder to describe or paste the source material
 2. Extract:
    - New targets or entities mentioned
    - Facts (with reliability assessment)
@@ -404,7 +433,7 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
    - **timeline-html:** Interactive timeline visualization
 3. **PDF screenshot pass:** Compile all URLs referenced in the report and appendix. Capture full-page PDF of each using GO FULL PAGE Chrome extension. Save to `output/exports/screenshots/`.
 4. Save to `output/exports/`
-5. Present to user
+5. Present to founder
 
 ---
 
@@ -483,4 +512,52 @@ bash skills/osint/scripts/run-actor.sh "actor/id" '{"input":"json"}'
 4. Read `memory/investigation-state.md` for what's been tried
 5. Draft 3-5 questions that target the biggest collection gaps, ask about relationships, and request identification of unknown persons
 6. Format as a copy-paste-ready email
-7. Present to user for review -- never send directly
+7. Present to founder for review -- never send directly
+
+---
+
+## /q-face [image_path] -- Reverse Face Search
+
+**Purpose:** Complete end-to-end face identification pipeline. Detects and crops faces, runs web-scale search across 4 engines, runs deepface ArcFace comparison against top candidates, returns ranked results for founder review.
+
+**Activation:** Runs when founder explicitly approves. No case gate required -- founder approval is the gate.
+
+**Steps:**
+1. Run the pipeline:
+   ```
+   python3 skills/osint/scripts/face-search.py <image_path> \
+     --case <case-slug> --gender male
+   ```
+   - Phase 1: deepface detects + crops all faces, classifies gender, isolates target
+   - Phase 2: Search4faces API + Yandex (Selenium) + Bing Visual Search (Selenium) + FaceCheck.ID API
+   - Phase 3: Downloads top 5 candidate profile photos, runs deepface ArcFace comparison, ranks by score
+   - Phase 4: Routes top 10 hit URLs through `capture-evidence.sh` for chain of custody
+2. Review ranked candidates output -- DEEPFACE MATCH entries are highest confidence
+3. Check manually: **Lenso.ai** (lenso.ai) and **FaceCheck.ID** (facecheck.id)
+4. Direct image comparison (after identifying a candidate photo):
+   ```
+   python3 face-search.py <image_path> --confirm <candidate_image_path>
+   ```
+5. Route confirmed account leads through `/q-intake`
+
+**First run -- verify environment:**
+```
+python3 skills/osint/scripts/face-search.py --setup
+```
+
+**Options:**
+- `--gender male|female|all` -- target specific face in group photos
+- `--no-confirm` -- skip deepface comparison phase (faster, web results only)
+- `--no-capture` -- skip evidence capture (dry run)
+- `--top N` -- number of candidates to deepface-confirm (default: 5)
+
+**API keys (optional -- pipeline runs without them, more engines = better coverage):**
+- `SEARCH4FACES_API_KEY` -- 500M+ VK/OK.ru/TikTok profiles
+- `FACECHECK_API_KEY` -- FaceCheck.ID paid API (Selenium fallback if absent)
+
+**Identity rule:**
+- Q presents ranked candidates. Founder makes the identity call.
+- Face search hits are T3 (hypothesis only). Attribution requires T1/T2 crosslink.
+- deepface score is supporting evidence -- not identification by itself.
+
+**Venv:** `skills/osint/face-env/` (Python 3.12 + deepface + tensorflow + selenium)

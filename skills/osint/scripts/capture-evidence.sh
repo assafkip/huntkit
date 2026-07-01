@@ -139,38 +139,17 @@ ARCHIVE_TODAY_URL=""
 PDF_SHA=""
 CAPTURE_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# ---------- Step 1: Wayback Machine submission ----------
+# ---------- Step 1: Wayback Machine submission (disabled) ----------
+# External archive submissions disabled per founder direction 2026-05-05.
+# Local hashed PDF + PNG provide sufficient chain of custody.
 
-echo "[1/4] Wayback Machine..."
-WAYBACK_RESP=$(curl -sSL -o /dev/null -w "%{http_code}|%{url_effective}" \
-  "https://web.archive.org/save/$URL" 2>&1 || echo "000|")
-WAYBACK_CODE="${WAYBACK_RESP%%|*}"
-WAYBACK_LOC="${WAYBACK_RESP#*|}"
-if [ "$WAYBACK_CODE" = "200" ] || [ "$WAYBACK_CODE" = "302" ]; then
-  WAYBACK_URL="$WAYBACK_LOC"
-  STATUS_WAYBACK="OK"
-  echo "      OK: $WAYBACK_URL"
-else
-  STATUS_WAYBACK="FAIL (http $WAYBACK_CODE)"
-  echo "      FAIL: http $WAYBACK_CODE"
-fi
+STATUS_WAYBACK="SKIPPED"
+echo "[1/4] Wayback Machine: SKIPPED (local-only mode)"
 
-# ---------- Step 2: archive.today submission ----------
+# ---------- Step 2: archive.today submission (disabled) ----------
 
-echo "[2/4] archive.today..."
-# archive.today returns a Refresh header pointing at the archived page on success
-AT_RESP=$(curl -sSL -I -X POST "https://archive.ph/submit/?url=$(printf '%s' "$URL" | jq -sRr @uri)" \
-  -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) huntkit/0.2" 2>&1 || echo "")
-AT_REFRESH=$(echo "$AT_RESP" | grep -i '^refresh:' | sed 's/.*url=//I' | tr -d '\r\n' || true)
-AT_LOC=$(echo "$AT_RESP" | grep -i '^location:' | awk '{print $2}' | tr -d '\r\n' || true)
-ARCHIVE_TODAY_URL="${AT_REFRESH:-$AT_LOC}"
-if [ -n "$ARCHIVE_TODAY_URL" ]; then
-  STATUS_ARCHIVE_TODAY="OK"
-  echo "      OK: $ARCHIVE_TODAY_URL"
-else
-  STATUS_ARCHIVE_TODAY="FAIL (no archive url returned)"
-  echo "      FAIL: no archive url returned"
-fi
+STATUS_ARCHIVE_TODAY="SKIPPED"
+echo "[2/4] archive.today: SKIPPED (local-only mode)"
 
 # ---------- Step 3: Chrome headless PDF ----------
 
@@ -301,13 +280,11 @@ jq -n \
 
 # ---------- Overall status ----------
 #
-# REQUIRED for COMPLETE: Wayback OK, PDF OK, PNG OK.
-# BEST-EFFORT: archive.today -- captured when possible, does not block COMPLETE.
-# Reason: archive.today captchas new POST submissions; Wayback + local hashed
-# PDF is sufficient chain of custody. archive.today is redundancy.
+# REQUIRED for COMPLETE: PDF OK, PNG OK.
+# External archives (Wayback, archive.today) are disabled in local-only mode.
+# Reason: founder directive -- local hashed PDF + PNG are sufficient chain of custody.
 
-if [ "$STATUS_WAYBACK" = "OK" ] \
-   && [ "$STATUS_PDF" = "OK" ] && [ "$STATUS_PNG" = "OK" ]; then
+if [ "$STATUS_PDF" = "OK" ] && [ "$STATUS_PNG" = "OK" ]; then
   OVERALL="COMPLETE"
 else
   OVERALL="INCOMPLETE"

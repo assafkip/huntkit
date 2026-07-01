@@ -5,8 +5,9 @@ description: >
   (MBTI/Big Five), career history, social graph with confidence scores. Recursive
   self-evaluation until completeness threshold is met. Includes internal intelligence
   (Telegram history, email, vault contacts) before going external.
-  Use when: "osint", "research person", "find everything about", "due diligence",
-  "background check", "digital footprint", "dossier", "profile someone".
+  Use when: "osint", "досье", "research person", "find everything about", "пробей",
+  "разведка", "due diligence", "background check", "digital footprint",
+  "найди всё про", "собери информацию", "кто это", "профиль человека".
   NOT for: company/product research without a named person, competitive analysis,
   market research, content generation, or general web scraping tasks.
 ---
@@ -20,7 +21,7 @@ dossier with psychoprofile, career map, and entry points.
 
 Determine entry point from context:
 
-- New name/handle/URL, "find out about" → Phase 0 (full cycle)
+- New name/handle/URL, "пробей", "find out about" → Phase 0 (full cycle)
 - "Add LinkedIn/Instagram data" to existing dossier → Phase 2 (extraction)
 - "Build psychoprofile" from existing data → Phase 4
 - "Rate completeness" of existing dossier → Phase 5
@@ -66,54 +67,101 @@ Each validates env vars, exits with descriptive error + URL to get the key.
 
 ## Research Escalation Flow
 
-**Principle: cheap before expensive, fast before deep.**
+**Принцип: от дешёвого к дорогому, от быстрого к глубокому.**
 
-### Level 1: Quick Answers (seconds, ~$0.00)
-Always start here. Get quick context before digging.
-Run ALL in parallel:
+### Level 1: Quick Answers (секунды, ~$0.00)
+Начни ВСЕГДА с этого. Получи быстрый контекст прежде чем копать.
+Запускай ВСЕ параллельно:
 ```bash
 # Perplexity (default: MCP tool, not the shell script)
 #   Claude call: mcp__perplexity-ask__perplexity_ask with a structured prompt
 #   (see "Prompt Templates" section — use the Entity Profile template, not ad-hoc "Who is X")
 # Shell fallback (bash pipelines or when you need sonar explicitly):
 #   bash skills/osint/scripts/perplexity.sh sonar "<structured prompt from Entity Profile template>"
-# Brave Search — classic web search
+# Brave Search — классический поиск
 web_search "<Name> <company> <role>"
-# Tavily — agent-optimized search with AI answer
+# Tavily — agent-optimized search с AI answer
 bash skills/osint/scripts/tavily.sh search "<Name> <context>"
-# Exa — semantic search + company/people research
+# Exa — семантический поиск + company/people research
 bash skills/osint/scripts/exa.sh search "<Name> <context>"
 bash skills/osint/scripts/exa.sh people "<Name>"
 ```
-→ Returns: quick facts, links, context.
-→ Decision: enough? → Phase 6. Need more? → Level 2.
+→ Получаешь: быстрые факты, ссылки, контекст.
+→ Решение: достаточно? → Phase 6. Нужно больше? → Level 1.5.
 
-### Level 2: Source Verification (seconds to minutes, ~$0.01)
-Verify sources from Level 1 via fetch:
+### Level 1.5: Breach Intel (free, run before any social scraping)
+
+**HudsonRock Cavalier** -- unauthenticated, instant, often CRITICAL. Run this immediately after Level 1 before spending a dollar on scraping.
+
 ```bash
-# Read discovered URLs
+# By domain (employees + third-party exposure)
+curl -s "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-domain?domain=target.com" | jq .
+
+# By email (individual credential exposure)
+curl -s "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-email?email=user@target.com" | jq .
+
+# Email-to-platform account lookup (holehe) -- FREE, no auth needed
+# Checks 100+ platforms to see which have accounts registered to an email
+# Install: pip install holehe --break-system-packages
+# Use: holehe target@email.com
+# [+] = registered  [-] = not registered  [x] = rate limited (inconclusive)
+# Does NOT require the password. Does NOT trigger resets.
+# Key for prior-identity investigations: run against all subject-confirmed emails
+holehe target@email.com
+
+# By URL (stealer log hits for a specific page)
+curl -s "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-url?url=https://target.com/login" | jq .
+```
+
+**Field interpretation:**
+- `employees` -- internal credential exposure (employee machines infected by stealers)
+- `users` -- customer/user credential exposure
+- `third_parties` -- supply-chain exposure (vendors, contractors whose machines had target creds)
+- `data.stealer_families` -- which malware families (Redline, Vidar, Raccoon, etc.)
+- `data.dates_compromised` -- recency of the breach (fresh = high risk of active abuse)
+- `data.employees_urls` -- exact internal URLs captured (shows depth of access)
+
+**Severity mapping:**
+- ≥10 employees exposed → **CRITICAL** (regardless of data age)
+- 1-9 employees exposed → **HIGH**
+- ≥1 end-user exposed → **MEDIUM**
+- 0 hits + old mail MX (NXDOMAIN on `mail.target.com`) + current cloud MX → **CRITICAL SSO_EXPOSURE** (on-prem → cloud migration = password reuse window)
+
+**HIBP domain check (complement to Cavalier):**
+```bash
+curl -s "https://haveibeenpwned.com/api/v3/breacheddomain/target.com" \
+  -H "hibp-api-key: ${HIBP_API_KEY}" | jq .
+```
+
+→ Cavalier hit? Document severity, log to `investigation/findings/breach-intel.md`, continue to Level 2.
+→ No hit? Still run Level 2 -- stealers don't catch everything.
+
+### Level 2: Source Verification (секунды-минуты, ~$0.01)
+Проверяй источники из Level 1 через fetch:
+```bash
+# Читай найденные URL
 web_fetch "<url_from_perplexity>"
 bash skills/osint/scripts/jina.sh read "<url>"
 bash skills/osint/scripts/parallel.sh extract "<url>"
 ```
-→ Returns: verified facts, cross-references.
-→ Match? → enrich the dossier. Need deeper? → Level 3.
+→ Получаешь: подтверждённые факты, cross-reference.
+→ Совпадает? → дополняй досье. Нужно глубже? → Level 3.
 
 ### Level 3: Social Media Deep Dive (~$0.01-0.10)
-Bring in scrapers for social platforms:
+Подключай scraping для соцсетей:
 ```bash
 # LinkedIn
 bash skills/osint/scripts/apify.sh linkedin "<url>"
 # Instagram
 bash skills/osint/scripts/apify.sh instagram "<handle>"
-# Facebook, geo-blocked sites
+# Facebook, заблокированные сайты
 bash skills/osint/scripts/brightdata.sh scrape "<url>"
 ```
-→ Returns: structured profiles, photos, connections.
+→ Получаешь: структурированные профили, фото, связи.
 
 ### Level 4: Deep Research (~$0.05-0.50)
-If you need to go deeper — compose an extended prompt and send to deep research.
-Run ALL in parallel (30-60 sec each):
+Если нужно копать ещё глубже — формируй развёрнутый промпт и отправляй в deep research.
+Запускай ВСЕ параллельно (30-60 сек каждый):
 ```bash
 # Perplexity Deep Research — use a template from "Prompt Templates" section
 bash skills/osint/scripts/perplexity.sh deep "<filled-in Entity Profile or Network Mapping template>"
@@ -127,8 +175,8 @@ bash skills/osint/scripts/parallel.sh search "<detailed query>"
 bash skills/osint/scripts/jina.sh deepsearch "<query>"
 ```
 
-**Rule:** the Level 4 prompt must be EXTENDED — include everything you already know
-from Level 1-3 so deep research does not repeat basic facts and digs further instead.
+**Правило:** Level 4 промпт должен быть РАЗВЁРНУТЫМ — включай всё что уже знаешь
+из Level 1-3, чтобы deep research не повторял базовые факты, а копал дальше.
 
 ## Prompt Templates (Perplexity MCP / shell)
 
@@ -210,7 +258,7 @@ bash skills/osint/scripts/perplexity-playbook.sh domain "acmecorp-com" "acmecorp
 
 # Fully automated pass: playbook -> capture -> persist to active case
 bash skills/osint/scripts/perplexity-playbook.sh company "acme-inc" "Acme Inc" \
-  --capture --case case-015-linkedin-algorithm
+  --capture --case case-001-example
 ```
 
 Output lives at `/tmp/osint-<slug>-<ISO8601>/`: `evidence.json` (merged citations), `urls.txt`, `urls.tsv` (batch input for `capture-evidence.sh`), `report.md`, `run_manifest.json`. With `--case`, artifacts are copied to `investigations/<case>/investigation/evidence/raw-collections/`.
@@ -253,7 +301,7 @@ The main agent is the coordinator — it does NOT scrape itself.
 
 1. Execute `bash skills/osint/scripts/diagnose.sh`.
 2. Log available vs missing tools.
-3. Check optional internal intelligence sources (Telegram recon CLI, local email client, CRM/notes archive). Skip Phase 1.5 entirely if none are configured.
+3. Check internal tools: `tg.py` (Telegram history), `himalaya` (email), vault contacts.
 4. If Bright Data unavailable → Facebook and LinkedIn deep scrape limited. Inform user.
 5. If Apify unavailable → Instagram and LinkedIn structured data limited.
 6. Proceed with available toolset.
@@ -284,16 +332,19 @@ The main agent is the coordinator — it does NOT scrape itself.
 **Rate limiting:** wait 1s between Brave queries, 2s between Jina calls.
 Do NOT hammer APIs in tight loops — stagger parallel launches.
 
-## Phase 1.5: Internal Intelligence (Optional)
+## Phase 1.5: Internal Intelligence
 
-**Before going external, check what you already know.** This phase is optional and applies
-only when you have local/internal sources that may contain relevant history on the target:
-prior conversations, email archives, CRM cards, or notes. Skip entirely if none apply.
+**Before going external, check what we already know.** This phase mines local sources
+that may contain gold — prior conversations, emails, vault contacts.
 
-### Telegram History (if you have a Telegram session + recon tool)
-The `tgspyder` CLI (third-party, see README) or equivalent Telegram OSINT tool can pull
-public group membership, chat messages, and user lookups. Use only on data you are
-authorized to access.
+### Telegram History
+If `tg.py` is available (check Phase 0):
+```bash
+# Search by name/handle in Telegram
+python3 skills/telegram/scripts/tg.py search "Name" 20
+# If we have their username/id — read conversation history
+python3 skills/telegram/scripts/tg.py history <username_or_id> 50
+```
 
 **What to extract from Telegram history:**
 - Communication style (formal/informal, language, emoji patterns)
@@ -308,9 +359,15 @@ authorized to access.
 Weight it higher than curated LinkedIn/Instagram profiles.
 ⚠️ **Privacy:** internal intelligence stays in the dossier. Never quote DMs in public outputs.
 
-### Email History (if you have a local email CLI/archive)
-Any local email client (himalaya, mutt, notmuch, etc.) or mail archive can be searched
-for prior correspondence with the target or their domain.
+### Email History
+If `himalaya` is available:
+```bash
+# Search emails by name or domain
+~/.local/bin/himalaya search "from:name@domain.com OR to:name@domain.com" -f INBOX
+# Or by name
+~/.local/bin/himalaya search "Name Surname" -f INBOX
+~/.local/bin/himalaya search "Name Surname" -f Sent
+```
 
 **What to extract from email:**
 - Formal communication style vs Telegram style (contrast = insight)
@@ -318,10 +375,20 @@ for prior correspondence with the target or their domain.
 - CC'd people → organizational map
 - Signature block → title, phone, company, social links (often richer than LinkedIn)
 
-### CRM / Notes Check (if you have a local knowledge base)
-If you maintain a CRM, vault, or notes system (Obsidian, Notion export, plain-text notes),
-check for existing cards on the target before starting external research. Enrich the
-existing card after research completes instead of duplicating.
+### Vault / CRM Check
+```bash
+# Check if we already have a card
+grep -rl "Name" vault/crm/ vault/contacts/ 2>/dev/null
+# Check MOC indexes (adjust paths to your vault structure)
+grep -i "name" vault/MOC/*.md 2>/dev/null
+```
+
+**If vault card exists:** read it, note last_accessed, existing tags, prior interactions.
+Don't duplicate — enrich the existing card after research completes.
+
+### Node Camera/Location (if paired device available)
+If meeting in person and node is available, `nodes camera_snap` can capture context.
+Only with explicit user permission.
 
 ### Internal Intelligence Summary
 After Phase 1.5, you should know:
@@ -366,6 +433,51 @@ Do NOT just note the URL. Extract transcripts/text NOW.
 A 20-minute YouTube video reveals more about a person than their entire LinkedIn.
 Content platforms are the #1 source for psychoprofile — skipping them = shallow dossier.
 
+### Email Harvest
+
+Run in parallel across all 6 sources. Do NOT rely on a single source.
+
+```bash
+# 1. IntelX phonebook (paid, highest yield for corporate domains)
+curl -s "https://2.intelx.io/phonebook/search" \
+  -H "x-key: ${INTELX_API_KEY}" \
+  -d '{"term":"target.com","buckets":[],"lookuplevel":0,"maxresults":100,"timeout":0,"datefrom":"","dateto":"","sort":4,"media":0,"terminate":[]}' | jq .
+
+# 2. Hunter.io (free tier: 25/mo, paid for bulk)
+curl -s "https://api.hunter.io/v2/domain-search?domain=target.com&api_key=${HUNTER_API_KEY}" | jq '.data.emails[].value'
+
+# 3. crt.sh SAN extraction (free, no auth)
+curl -s "https://crt.sh/?q=%25@target.com&output=json" | jq -r '.[].name_value' | grep '@' | sort -u
+
+# 4. DuckDuckGo SERP scrape
+bash skills/osint/scripts/perplexity.sh search "site:target.com email OR contact filetype:html"
+
+# 5. Wayback CDX email harvest (free)
+curl -s "http://web.archive.org/cdx/search/cdx?url=*.target.com/*&output=json&fl=original&filter=statuscode:200&collapse=urlkey" \
+  | jq -r '.[][0]' | grep -Eo '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sort -u
+
+# 6. Bright Data SERP (catches what DDG misses)
+bash skills/osint/scripts/brightdata.sh search '"@target.com" email contact'
+```
+
+**Email pattern inference** -- after harvest, infer the domain's naming convention:
+
+Candidate templates to test (mark each TENTATIVE until Hunter.io or 2+ live addresses confirm):
+```
+firstname@           lastname@           f.lastname@
+firstname.lastname@  firstnamelastname@  flastname@
+firstname_lastname@  f_lastname@
+```
+
+**Rules:**
+- Extract dominant pattern from Hunter.io `pattern` field if available -- it overrides inference
+- Discard addresses with numeric-only local parts (spam traps)
+- Filter regex: `^[a-zA-Z][a-zA-Z0-9._%+-]{1,}@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+- If 3+ harvested addresses match one template → mark template FIRM, generate candidates for known names
+- Cross-reference all harvested emails against Cavalier (Level 1.5) for breach exposure
+
+**Output:** write to `investigation/targets/[org]-emails.md` with source, confidence (TENTATIVE/FIRM/CONFIRMED), and Cavalier hit status per address.
+
 ### OpSec-Aware Targets
 
 If initial searches return unusually little for someone who should have a footprint:
@@ -373,7 +485,7 @@ If initial searches return unusually little for someone who should have a footpr
 1. **Wayback Machine:** `web_fetch "https://web.archive.org/web/2024*/target-url"` — deleted profiles, old bios
 2. **Google Cache:** `web_search "cache:domain.com/path"` — recently removed pages
 3. **Yandex Cache:** `brightdata.sh search-yandex "Name"` — Yandex indexes CIS deeper and caches longer
-4. **Username variations:** try transliteration of non-Latin names (e.g., Ivanov → ivanov / ivanoff), birth year suffixes, company abbreviations
+4. **Username variations:** try transliteration (Иванов → ivanov, ivanoff), birth year suffixes, company abbreviations
 5. **Reverse image search:** if photo found, check for other profiles using same avatar
 6. **Conference archives:** speaker bios often survive after profiles are deleted
 
@@ -396,7 +508,7 @@ If LinkedIn says "CEO" but company site says "Co-founder" — flag explicitly. I
 ### Step 4: Name collision check
 If common name — verify at least 2 facts (company + city, or photo + company) link to same person. If unsure, split into separate entities.
 
-### Confidence grades:
+### Confidence grades (source-level):
 
 - **A (confirmed)**: 2+ independent sources, or official/verified profile, or direct Telegram/email conversation
 - **B (probable)**: 1 credible source (LinkedIn, official media, company site)
@@ -404,6 +516,31 @@ If common name — verify at least 2 facts (company + city, or photo + company) 
 - **D (unverified)**: single mention, could be wrong
 
 Internal intelligence (Phase 1.5) counts as an independent source.
+
+### Asset confidence (claim-level) -- TENTATIVE / FIRM / CONFIRMED
+
+Track individual claims separately from source grades. A single A-grade source can establish FIRM; two independent sources establish CONFIRMED.
+
+| Asset type | TENTATIVE | FIRM | CONFIRMED |
+|------------|-----------|------|-----------|
+| Email address | Found in 1 source, unvalidated | Pattern matches domain convention OR Hunter.io confirms | SMTP verify passes OR Cavalier hit OR direct reply |
+| Domain / subdomain | DNS resolves | HTTP 200 response | Active service + cert SAN match |
+| Person identity | Name match only | Name + photo OR name + employer | Name + photo + 2nd identifier (DOB, location, contact) |
+| Employment | 1 source (LinkedIn self-reported) | LinkedIn + company site OR press mention | Official filing OR payroll-adjacent (email domain + badge) |
+| Location | IP geolocation or single mention | 2 independent geolocations OR Telegram timezone match | Direct confirmation or flight/hotel record |
+| Breach exposure | Cavalier 1-4 employees hit | Cavalier ≥5 employees OR HIBP domain breach | Fresh stealer data (<6 months) + active credential validation |
+| Social account | Handle found | Handle + profile data extracted | Handle + account activity + cross-platform ID match |
+
+**Upgrade rules:**
+- TENTATIVE → FIRM: add one corroborating source of a different type (not just a second scrape of the same platform)
+- FIRM → CONFIRMED: direct validation (live check, file download, reply received) OR 3+ independent sources
+- Never cite a TENTATIVE claim in a client brief without explicit uncertainty labeling
+- TENTATIVE claims that cannot be upgraded after 2 collection attempts → flag as COLLECTION GAP in `investigation-state.md`
+
+**How source grade and asset confidence relate:**
+- Source grade (A-D) describes how reliable the source is
+- Asset confidence (TENTATIVE/FIRM/CONFIRMED) describes how certain we are about the specific claim
+- A D-grade source can still upgrade an asset to FIRM if it independently corroborates a TENTATIVE claim from an A-grade source
 
 ## Phase 4: Psychoprofile
 
@@ -487,7 +624,7 @@ Read `assets/dossier-template.md` before rendering. Follow the template structur
 No markdown tables in output (Telegram cannot render). Bullet lists only.
 Report Depth Score, source count, source types, and total API spend.
 
-If internal intelligence was used, add a separate **"Internal intelligence"** section
+If internal intelligence was used, add a separate **"из переписки"** section
 (marked as internal/confidential, not for sharing outside).
 
 ## Budget
@@ -507,6 +644,169 @@ If internal intelligence was used, add a separate **"Internal intelligence"** se
 - **TikTok scraper fails**: try `clockworks/free-tiktok-scraper` (free tier) as fallback. TikTok usernames often differ from other platforms — search by real name via `clockworks/tiktok-user-search-scraper`.
 - **Need emails from website**: use `vdrmota/contact-info-scraper` — it crawls the site and extracts all contact info.
 - **Rate limited (429)**: back off 5s, then 15s. Switch to fallback tool. Never retry immediately.
+
+## Meta Ad Library Hidden API Collection
+
+Use `scripts/meta-ad-library-hidden-api.sh` when Meta Ad Library pages expose public ad data in the browser but Apify actors return empty results. This is for public Ad Library data only. Do not store cookies, session headers, `fb_dtsg`, `lsd`, bearer tokens, or browser profile material in the repo.
+
+### Setup
+
+```bash
+brew install go
+git clone https://github.com/mvanhorn/cli-printing-press /tmp/cli-printing-press
+(cd /tmp/cli-printing-press && go build -o "$HOME/go/bin/cli-printing-press" ./cmd/cli-printing-press)
+```
+
+### Capture request shape
+
+1. Open the target ad in a logged-in Chrome session:
+   `https://www.facebook.com/ads/library/?id=<AD_ID>`
+2. Export a HAR from Chrome DevTools after the ad details load.
+3. Run Printing Press over the HAR:
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --sniff-har /path/to/meta-ad-library.har
+```
+
+4. Convert the discovered Ad Library request into `config/meta-ad-library/request-template.json`.
+5. Set `status` to `ready`. The `replay.command` array must write raw JSON to stdout and may use:
+   - `{{AD_ID}}` for the current ad ID
+   - `{{ENV:NAME}}` for required environment variables held outside git
+
+### Replay and evidence routing
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  2346460479208627 1798738457767270
+```
+
+Outputs are written to `investigations/<case>/investigation/evidence/raw/meta-ad-library-hidden-api/`:
+
+- `<ad_id>-raw.json` -- raw hidden API response
+- `<ad_id>-normalized.json` -- stable Q evidence fields
+- `run-manifest.json` -- timestamp, ad IDs, status, reason, and paths
+- `investigation/findings/F-010-facebook-ad-attribution.md` -- created only when advertiser or page identity is recovered
+
+### CDP search
+
+Use this when the question starts from a suspicious landing domain, scam phrase, or advertiser/page label and US Meta Ad Library API coverage is not enough.
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --cdp-search-domain example-shop.com
+
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --cdp-search-keyword "cat eye colorful seeds"
+
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --cdp-search-advertiser "FlowerSeed Shop"
+```
+
+This launches isolated Chrome with a temporary profile, searches public US Ad Library UI results for the domain, captures rendered DOM text plus relevant network metadata, and removes the temporary browser profile at the end.
+
+Additional outputs:
+
+- `<mode>-<query>-raw.json` -- query-level raw capture references and parsed ads
+- `<mode>-<query>-normalized.json` -- normalized advertiser/page, landing URLs when available, Library IDs, status, dates, and creative text
+- `cdp-capture/<mode>-<query>-dom.txt` -- rendered DOM evidence
+- `cdp-capture/<mode>-<query>-network-index.json` -- network response metadata without request headers
+- `cdp-capture/<mode>-<query>-network-body-*.json` -- selected redacted JSON/text response bodies when CDP exposes them
+
+Domain mode records the searched domain as `landing_url_source=query_domain` when the rendered card does not expose a destination URL. Keyword and advertiser modes only record landing URLs when the UI or captured response body exposes them.
+
+### Printing Press capture
+
+Use this to turn the same isolated CDP search into a sanitized HAR and Printing Press analysis artifacts:
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --printing-press-capture \
+  --cdp-search-domain example-shop.com
+```
+
+Additional outputs:
+
+- `printing-press/<mode>-<query>-sanitized.har` -- HAR with cookies, auth headers, token-like headers, and token-like body values removed
+- `printing-press/<mode>-<query>-spec.yaml` -- Printing Press browser-sniff spec
+- `printing-press/<mode>-<query>-analysis.json` -- endpoint analysis sidecar
+- `printing-press/<mode>-<query>-samples/` -- redacted endpoint samples
+- `printing-press/<mode>-<query>-capture-summary.json` -- Q summary with replay still marked blocked until manual validation
+
+Do not set `config/meta-ad-library/request-template.json` to `status=ready` from capture alone. Only mark it ready after a sanitized replay command is validated and writes JSON without storing session material.
+
+Current replay readiness, 2026-06-26:
+
+- `--printing-press-capture --cdp-search-domain example-shop.com` completed.
+- Printing Press produced a spec, analysis, samples, and sanitized HAR.
+- The captured endpoints were `/ads/library/` HTML plus low-confidence `/ajax/qm/` and `/ajax/bz` calls.
+- No validated JSON ad-data replay endpoint was found.
+- `request-template.json` must remain `status=needs_capture`.
+
+Replay can be marked ready only when a sanitized command writes JSON evidence to stdout, contains advertiser/page/creative/landing/status fields, and works without cookies, auth headers, `fb_dtsg`, `lsd`, bearer tokens, or browser profile material.
+
+### CDP detail capture
+
+Use this when you already have visible Library IDs and need deeper per-ad evidence:
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --cdp-detail 2004513076810141 4027982630835003
+```
+
+This opens each public Ad Library detail URL directly:
+
+```text
+https://www.facebook.com/ads/library/?id=<LIBRARY_ID>
+```
+
+Detail outputs:
+
+- `<library_id>-detail-raw.json` -- detail capture, sanitized links, parsed fields, and artifact paths
+- `<library_id>-detail-normalized.json` -- advertiser/page, creative, landing URLs, dates, status, page URLs, transparency links, page ID hints, and missing fields
+- `cdp-capture/<library_id>-detail-dom.txt` -- rendered detail DOM evidence
+- `cdp-capture/<library_id>-detail-network-index.json` -- sanitized network metadata
+- `cdp-capture/<library_id>-detail-network-body-*` -- selected redacted response bodies when CDP exposes them
+
+`--printing-press-capture` may be combined with `--cdp-detail`, but replay remains blocked until a validated hidden JSON endpoint is found.
+
+### CDP page/entity pivot
+
+Use this after detail capture recovers Facebook page or page-filter IDs:
+
+```bash
+bash scripts/meta-ad-library-hidden-api.sh \
+  --case case-001-example \
+  --cdp-page 61575232177183 654188471104939
+```
+
+This opens the public Facebook page URL and Ad Library page-filter URL for each ID, then writes:
+
+- `<page_id>-page-raw.json` -- captured sources, links, parsed fields, and artifact paths
+- `<page_id>-page-normalized.json` -- page name, page URLs, websites, page ID hints, visible Library IDs, count/transparency text, and business entity when visible
+- `cdp-capture/<page_id>-page-dom.txt` -- rendered public page and Ad Library page-filter DOM evidence
+- `cdp-capture/<page_id>-page-network-index.json` -- sanitized network metadata
+
+Do not claim legal/business entity attribution unless the normalized output contains visible evidence for it.
+
+### Failure modes
+
+- Template missing or `status != ready`: fail-stop with `run-manifest.json` status `blocked`.
+- Replay command exits non-zero: fail-stop and do not write attribution.
+- Empty or non-JSON response: fail-stop and do not write attribution.
+- Missing advertiser/page fields: normalized JSON lists `missing_fields`; do not upgrade attribution confidence.
+- CDP search finds no visible ads: fail-stop with `run-manifest.json` status `blocked`.
+- CDP search finds ads but no advertiser/page identity: write `partial` status and do not write attribution.
+- Printing Press missing or browser-sniff failure: fail-stop after writing the sanitized HAR/capture summary where possible; do not mark replay ready.
+- CDP detail captures a page but no advertiser/page identity: write `partial` status and preserve DOM/network artifacts for manual review.
+- CDP page/entity pivot finds no visible page/entity fields: write `partial` status and preserve DOM/network artifacts for manual review.
 
 ## Anti-Patterns
 

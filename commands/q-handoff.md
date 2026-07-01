@@ -14,7 +14,7 @@ Save to the active case's `memory/last-handoff.md`.
 ## Triggers
 
 Run this when:
-- The user says "done", "stopping", "wrapping up"
+- The founder says "done", "stopping", "wrapping up"
 - Context is running low
 - After `/q-end` or `/q-checkpoint`
 - Before context compaction

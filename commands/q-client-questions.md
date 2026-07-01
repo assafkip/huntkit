@@ -6,7 +6,7 @@ The client often knows the answer to questions that would take 50+ tool calls to
 
 1. Read `canonical/scope.md` for hypotheses and primary question
 2. Read `canonical/collection-plan.md` for outstanding gaps
-3. Read `investigation/targets/` for collection status on each target
+3. Read `investigations/<case>/targets/` for collection status on each target
 4. Read `memory/investigation-state.md` for what's been tried
 
 ## Draft 3-5 questions that:
@@ -34,6 +34,6 @@ Questions:
 [Professional sign-off]
 ```
 
-Present the draft to the user for review before sending. Never send directly.
+Present the draft to the founder for review before sending. Never send directly.
 
 Argument: $ARGUMENTS (optional: specific gap to focus questions on)

@@ -168,7 +168,7 @@ def check_exact_retry(tool_name, tool_input, cache):
     # Include current call in count
     count = cache.get("repeat_map", {}).get(key, 0) + 1
     if count >= RETRY_LIMIT:
-        return f"You've attempted this exact call {count} times. Stop. Diagnose the failure and tell the user what's blocking you."
+        return f"You've attempted this exact call {count} times. Stop. Diagnose the failure and tell the founder what's blocking you."
     return None
 
 

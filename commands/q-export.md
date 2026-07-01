@@ -4,12 +4,12 @@ Execute the /q-export steps from `.q-system/commands.md`.
 
 Formats: markdown, json, timeline-html
 
-1. Gather all investigation files from `investigation/`
+1. Gather all investigation files from `investigations/<case>/`
 2. Export in requested format:
    - markdown: Full investigation report
    - json: Structured data (targets, findings, links, timeline)
    - timeline-html: Interactive timeline visualization
 3. Save to `output/exports/`
-4. Present to user
+4. Present to founder
 
 Argument: $ARGUMENTS (optional: format -- markdown, json, or timeline-html. Defaults to markdown.)

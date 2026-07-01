@@ -12,6 +12,6 @@ Execute the /q-brief steps from `.q-system/commands.md`.
    - Hypotheses status: supported / refuted / undetermined
    - Recommended next steps: prioritized by impact, tagged with Energy + Time Est
 3. Save to `output/briefs/brief-YYYY-MM-DD.md`
-4. Present to user
+4. Present to founder
 
 Argument: $ARGUMENTS (optional: "executive" for short version)

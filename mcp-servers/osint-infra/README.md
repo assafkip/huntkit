@@ -35,8 +35,8 @@ Add to `.mcp.json` in your project root:
 {
   "mcpServers": {
     "osint-infra": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/mcp-servers/osint-infra/.venv/bin/python",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-servers/osint-infra/server.py"]
+      "command": "tools/osint-infra-mcp/.venv/bin/python",
+      "args": ["tools/osint-infra-mcp/server.py"]
     }
   }
 }

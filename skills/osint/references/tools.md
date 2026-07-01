@@ -247,7 +247,7 @@ timeout, and CSV/JSON export automatically.
 
 - Public channel posts: `web_fetch https://t.me/s/{channel}` (free, last ~20 posts)
 - Profile bio: `web_fetch https://t.me/{username}` (free, shows bio/title)
-- Private messages: `tgspyder` (third-party Telegram OSINT CLI — see repo README) or equivalent Telegram recon tool, only on data you are authorized to access
+- Private messages: tg.py (Telegram skill) or mcporter telegram tools
 
 ---
 

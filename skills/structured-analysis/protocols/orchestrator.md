@@ -24,8 +24,8 @@ The output directory for this analysis. Set to:
 investigations/<active-case>/output/analyses/{{ANALYSIS_ID}}
 ```
 
-1. Read `./.active-case` to get the active case folder name
-2. If the file is empty or missing, ask the user which case this analysis belongs to, then write their answer to `.active-case`
+1. Read `.active-case` to get the active case folder name
+2. If the file is empty or missing, ask the founder which case this analysis belongs to, then write their answer to `.active-case`
 3. Resolve the full path: `investigations/<active-case>/output/analyses/{{ANALYSIS_ID}}`
 
 **All paths in this protocol and in subagent prompts use these variables.** When constructing subagent prompts, substitute the resolved paths -- subagents do not read SKILL.md and cannot resolve relative paths on their own.
@@ -340,7 +340,7 @@ Within each tier, techniques run in parallel (no intra-tier dependencies). The o
 4. **For each tier (1 → 4)**, if that tier has selected techniques:
    a. Build the file manifest: list all files currently in `{{ANALYSIS_DIR}}/working/`
    b. Construct one subagent prompt per technique using the template below
-   c. Launch all tier subagents as background agents (via Agent tool) in parallel
+   c. Launch all tier subagents as background agents (via Agent tool, `model: "opus"`) in parallel. Technique execution (ACH, KAC, deception, premortem, etc.) is the core reasoning workload of `/analyze` and is pinned to Opus regardless of the parent session's model.
    d. Wait for all tier subagents to complete
    e. Collect and validate each subagent's return summary
    e2. **Artifact validation**: For each completed subagent, verify the artifact file exists on disk and contains no unfilled `{{PLACEHOLDER}}` tokens. If validation fails, log as `PARTIAL` and add a Layer 1 flag.

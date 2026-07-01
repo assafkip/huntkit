@@ -4,7 +4,7 @@ Arguments: $ARGUMENTS (company name or domain, e.g. "elite.com" or "Acme Corp")
 
 ## When to use
 
-- User says "/q-sec-stack <company>" to start or continue a security stack intel run
+- Founder says "/q-sec-stack <company>" to start or continue a security stack intel run
 - Goal: identify security tooling, team structure, threats (last 12mo); keep all of it in one written case file
 - Output feeds a downstream demo/product tool that converts intel into tool- and team-specific action items
 
@@ -17,7 +17,7 @@ Location in each case: `investigations/case-NNN-<slug>/CASE.md`
 
 ## Preflight
 
-1. Read `./.active-case` to see if a case already exists for this company
+1. Read `.active-case` to see if a case already exists for this company
 2. Look for an existing case folder matching the slug (e.g. `case-NNN-<company-slug>`)
 3. If found: load `CASE.md` as source of truth; merge new findings into sections 2-9; append run entry to section 10
 4. If not found: scaffold a new case:
@@ -26,14 +26,14 @@ Location in each case: `investigations/case-NNN-<slug>/CASE.md`
    - `cp -R templates/new-investigation investigations/case-NNN-<slug>`
    - `cp templates/sec-stack-case/CASE.md investigations/case-NNN-<slug>/CASE.md`
    - Fill header fields (company, case ID, domain, as_of_date, status=active)
-   - Write folder name to `./.active-case`
+   - Write folder name to `.active-case`
    - Leave canonical/scope.md minimal or delete it -- CASE.md is authoritative for sec-stack cases
 
 ## Entity disambiguation (MANDATORY FIRST PASS)
 
 Before collection:
 1. Resolve the legal entity behind the company name (whois, DNS, LinkedIn, SEC EDGAR if public)
-2. If multiple candidates exist (e.g. "elite.com" -> Elite SEM vs Elite World Group vs Elite Singles), STOP and ask the user which entity
+2. If multiple candidates exist (e.g. "elite.com" -> Elite SEM vs Elite World Group vs Elite Singles), STOP and ask the founder which entity
 3. Record resolution in CASE.md section 2 (Entity & Scope)
 
 ## Collection method (follow this order)
@@ -66,7 +66,7 @@ Every URL-sourced claim must be captured via `capture-evidence.sh` into `investi
 
 ## Output format
 
-CASE.md section order is fixed. Do not reorder or rename sections. Do not add new top-level sections without user approval.
+CASE.md section order is fixed. Do not reorder or rename sections. Do not add new top-level sections without founder approval.
 
 1. Executive Summary (350 words max, regenerated each run)
 2. Entity & Scope
@@ -81,7 +81,7 @@ CASE.md section order is fixed. Do not reorder or rename sections. Do not add ne
 
 ## Demo tool input
 
-When the user asks "what do I share with my demo tool," share `CASE.md`. It contains everything in one file.
+When the founder asks "what do I share with my demo tool," share `CASE.md`. It contains everything in one file.
 
 ## Quality bar
 
@@ -92,4 +92,4 @@ When the user asks "what do I share with my demo tool," share `CASE.md`. It cont
 
 ## Fail-stop
 
-If entity disambiguation fails, if capture-evidence.sh fails, or if 10 tool calls produce no usable evidence: STOP, tell the user what broke, wait.
+If entity disambiguation fails, if capture-evidence.sh fails, or if 10 tool calls produce no usable evidence: STOP, tell the founder what broke, wait.
