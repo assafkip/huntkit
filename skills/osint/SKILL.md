@@ -45,7 +45,7 @@ All API keys via environment variables. Never hardcode tokens.
 ## Scripts
 
 Run from skill dir: `bash scripts/<name>.sh`.
-Each validates env vars, exits with descriptive error + URL to get the key.
+Each script validates env vars, exits with descriptive error + URL to get the key.
 
 **Search & Research:**
 - `diagnose.sh` — run FIRST. Capability map of all tools.
@@ -135,6 +135,28 @@ curl -s "https://haveibeenpwned.com/api/v3/breacheddomain/target.com" \
 
 → Cavalier hit? Document severity, log to `investigation/findings/breach-intel.md`, continue to Level 2.
 → No hit? Still run Level 2 -- stealers don't catch everything.
+
+### Level 1.6: Identity & Leak Lookups (free, no key, run alongside Level 1.5)
+
+Keyless public APIs -- no scraping, no captcha risk. Cheap enough to run on every target as a matter of course.
+
+```bash
+# Keybase -- cryptographically signed social proofs (T2-grade: the proof
+# is signed by the linked account, not a name-match guess)
+bash skills/osint/scripts/identity-lookup.sh keybase "<username>"
+
+# GitHub -- profile often leaks real email/location for technical targets
+bash skills/osint/scripts/identity-lookup.sh github "<username>"
+
+# Mastodon -- federated search (mastodon.social vantage point only)
+bash skills/osint/scripts/identity-lookup.sh mastodon "<name or handle>"
+
+# LeakCheck public tier -- low-rate credential exposure check, complements
+# HudsonRock Cavalier above
+bash skills/osint/scripts/identity-lookup.sh leakcheck "<email>"
+```
+
+→ Hits here are still T3 hypotheses until crosslinked per the evidence-tier rules -- a signed Keybase proof or a GitHub-listed email is a strong crosslink candidate; a Mastodon display-name match alone is not.
 
 ### Level 2: Source Verification (секунды-минуты, ~$0.01)
 Проверяй источники из Level 1 через fetch:
