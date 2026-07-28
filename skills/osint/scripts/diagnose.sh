@@ -80,7 +80,7 @@ if command -v node &>/dev/null; then
 else
   echo "  ❌ node (required for run_actor.js)"
 fi
-[ -f "$SKILL_DIR/scripts/run_actor.js" ] && echo "  ✅ run_actor.js (embedded, 55+ actors)" || echo "  ❌ run_actor.js (missing from skill)"
+[ -f "$SKILL_DIR/scripts/run_actor.js" ] && echo "  ✅ run_actor.js (embedded, 57+ actors)" || echo "  ❌ run_actor.js (missing from skill)"
 [ -f "$SKILL_DIR/scripts/run-actor.sh" ] && echo "  ✅ run-actor.sh (bash wrapper)" || echo "  ❌ run-actor.sh"
 echo ""
 

@@ -17,7 +17,7 @@
 import { parseArgs } from 'node:util';
 import { writeFileSync, readFileSync, statSync } from 'node:fs';
 
-const USER_AGENT = 'osint-skill/3.1 (apify-agent-skills/apify-ultimate-scraper-1.3.0)';
+const USER_AGENT = 'osint-skill/3.3 (apify-agent-skills/apify-ultimate-scraper-1.3.0)';
 
 function parseCliArgs() {
     const options = {
@@ -27,6 +27,7 @@ function parseCliArgs() {
         format: { type: 'string', short: 'f', default: 'csv' },
         timeout: { type: 'string', short: 't', default: '600' },
         'poll-interval': { type: 'string', default: '5' },
+        'max-total-charge-usd': { type: 'string' },
         help: { type: 'boolean', short: 'h' },
     };
 
@@ -56,7 +57,22 @@ function parseCliArgs() {
         format: values.format || 'csv',
         timeout: parseInt(values.timeout, 10),
         pollInterval: parseInt(values['poll-interval'], 10),
+        maxTotalChargeUsd: parsePositiveNumber(
+            values['max-total-charge-usd'],
+            '--max-total-charge-usd',
+        ),
     };
+}
+
+function parsePositiveNumber(value, optionName) {
+    if (value === undefined) return undefined;
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        console.error(`Error: ${optionName} must be a positive number`);
+        process.exit(1);
+    }
+    return parsed;
 }
 
 function printHelp() {
@@ -73,15 +89,28 @@ Options:
   --format, -f      Output format: csv, json (default: csv)
   --timeout, -t     Max wait time in seconds (default: 600)
   --poll-interval   Seconds between status checks (default: 5)
+  --max-total-charge-usd
+                    Stop the Actor after this Apify charge limit
   --help, -h        Show this help message
 
 Env: APIFY_TOKEN or APIFY_API_TOKEN (either works)
 `);
 }
 
-async function startActor(token, actorId, inputJson) {
+function apifyHeaders(token, extra = {}) {
+    return {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': USER_AGENT,
+        ...extra,
+    };
+}
+
+async function startActor(token, actorId, inputJson, maxTotalChargeUsd) {
     const apiActorId = actorId.replace('/', '~');
-    const url = `https://api.apify.com/v2/acts/${apiActorId}/runs?token=${encodeURIComponent(token)}`;
+    const url = new URL(`https://api.apify.com/v2/actors/${apiActorId}/runs`);
+    if (maxTotalChargeUsd !== undefined) {
+        url.searchParams.set('maxTotalChargeUsd', String(maxTotalChargeUsd));
+    }
 
     let data;
     try {
@@ -93,10 +122,9 @@ async function startActor(token, actorId, inputJson) {
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
+        headers: apifyHeaders(token, {
             'Content-Type': 'application/json',
-            'User-Agent': USER_AGENT,
-        },
+        }),
         body: JSON.stringify(data),
     });
 
@@ -119,12 +147,14 @@ async function startActor(token, actorId, inputJson) {
 }
 
 async function pollUntilComplete(token, runId, timeout, interval) {
-    const url = `https://api.apify.com/v2/actor-runs/${runId}?token=${encodeURIComponent(token)}`;
+    const url = `https://api.apify.com/v2/actor-runs/${runId}`;
     const startTime = Date.now();
     let lastStatus = null;
 
     while (true) {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: apifyHeaders(token),
+        });
         if (!response.ok) {
             const text = await response.text();
             console.error(`Error: Failed to get run status: ${text}`);
@@ -154,10 +184,10 @@ async function pollUntilComplete(token, runId, timeout, interval) {
 }
 
 async function downloadResults(token, datasetId, outputPath, format) {
-    const url = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${encodeURIComponent(token)}&format=json`;
+    const url = `https://api.apify.com/v2/datasets/${datasetId}/items?format=json`;
 
     const response = await fetch(url, {
-        headers: { 'User-Agent': USER_AGENT },
+        headers: apifyHeaders(token),
     });
 
     if (!response.ok) {
@@ -202,10 +232,10 @@ async function downloadResults(token, datasetId, outputPath, format) {
 }
 
 async function displayQuickAnswer(token, datasetId) {
-    const url = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${encodeURIComponent(token)}&format=json`;
+    const url = `https://api.apify.com/v2/datasets/${datasetId}/items?format=json`;
 
     const response = await fetch(url, {
-        headers: { 'User-Agent': USER_AGENT },
+        headers: apifyHeaders(token),
     });
 
     if (!response.ok) {
@@ -286,7 +316,12 @@ async function main() {
     }
 
     console.log(`Starting actor: ${args.actor}`);
-    const { runId, datasetId } = await startActor(token, args.actor, args.input);
+    const { runId, datasetId } = await startActor(
+        token,
+        args.actor,
+        args.input,
+        args.maxTotalChargeUsd,
+    );
     console.log(`Run ID: ${runId}`);
     console.log(`Dataset ID: ${datasetId}`);
 

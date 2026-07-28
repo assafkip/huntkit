@@ -7,6 +7,7 @@
 # Examples:
 #   run-actor.sh "apify/instagram-profile-scraper" '{"usernames":["handle"]}'
 #   run-actor.sh "compass/crawler-google-places" '{"searchStringsArray":["cafes"]}' --output /tmp/cafes.csv
+#   run-actor.sh "xquik/x-tweet-scraper" '{"mode":"profileTweets","twitterHandles":["handle"],"maxItems":50}' --max-total-charge-usd 0.25
 #
 # Env: APIFY_API_TOKEN or APIFY_TOKEN (either works)
 
