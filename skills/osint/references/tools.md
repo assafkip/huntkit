@@ -4,7 +4,7 @@
 1. [Search Tools](#search-tools)
 2. [Scraping Tools](#scraping-tools)
 3. [Apify Actor Runner](#apify-actor-runner-embedded)
-4. [Apify Actor Catalog (55+)](#apify-actor-catalog)
+4. [Apify Actor Catalog (57+)](#apify-actor-catalog)
 5. [Actor Discovery](#actor-discovery)
 6. [Shortcuts (apify.sh)](#shortcuts)
 7. [Telegram](#telegram)
@@ -67,10 +67,12 @@
 bash scripts/run-actor.sh "ACTOR_ID" 'JSON_INPUT'
 
 # Export to CSV
-bash scripts/run-actor.sh "ACTOR_ID" 'JSON_INPUT' --output /tmp/result.csv --format csv
+bash scripts/run-actor.sh "ACTOR_ID" 'JSON_INPUT' \
+  --output /tmp/result.csv --format csv --max-total-charge-usd 0.25
 
 # Export to JSON
-bash scripts/run-actor.sh "ACTOR_ID" 'JSON_INPUT' --output /tmp/result.json --format json
+bash scripts/run-actor.sh "ACTOR_ID" 'JSON_INPUT' \
+  --output /tmp/result.json --format json --max-total-charge-usd 0.25
 ```
 
 ### Direct node call
@@ -121,6 +123,31 @@ APIFY_TOKEN=$APIFY_API_TOKEN node scripts/run_actor.js \
 | `apify/facebook-followers-following-scraper` | Follower/following lists | Social graph |
 
 **Note:** Facebook personal profiles require Bright Data. These actors work with public Pages/Groups/Marketplace.
+
+### X (2 actors)
+
+| Actor ID | Best For | OSINT Use |
+|----------|----------|-----------|
+| [`xquik/x-tweet-scraper`](https://apify.com/xquik/x-tweet-scraper) | Posts, searches, replies, quotes, threads, timelines | Public content and activity analysis |
+| [`xquik/x-follower-scraper`](https://apify.com/xquik/x-follower-scraper) | Followers, following, verified followers, lists, communities | Public social graph and audience overlap |
+
+Start with bounded inputs and a charge limit:
+
+```bash
+bash scripts/run-actor.sh "xquik/x-tweet-scraper" \
+  '{"mode":"profileTweets","twitterHandles":["target_handle"],"maxItems":50,"outputVariant":"rich","outputPreset":"nested","fieldStyle":"camelCase"}' \
+  --output /tmp/x-posts.json --format json --max-total-charge-usd 0.25
+
+bash scripts/run-actor.sh "xquik/x-follower-scraper" \
+  '{"twitterHandles":["target_handle"],"relation":"followers","maxItems":50,"maxItemsPerTarget":50,"outputMode":"compact","includeTargetMetadata":true}' \
+  --output /tmp/x-followers.json --format json --max-total-charge-usd 0.25
+```
+
+Check current pricing and input limits on each Store page. Treat connections as
+leads, not proof of a relationship. Use public data only. Never target protected
+accounts or infer sensitive traits from a connection.
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.
 
 ### TikTok (14 actors)
 
@@ -185,9 +212,9 @@ LinkedIn actors are volatile on Apify. Current primary:
 | OSINT Phase | What You Need | Primary Actors |
 |-------------|---------------|----------------|
 | **Profile discovery** | Find accounts | `apify/instagram-search-scraper`, `clockworks/tiktok-user-search-scraper`, `apify/facebook-search-scraper` |
-| **Profile deep dive** | Extract bio/stats | `apify/instagram-profile-scraper`, `clockworks/tiktok-profile-scraper`, `streamers/youtube-channel-scraper` |
-| **Social graph** | Who they interact with | `apify/instagram-tagged-scraper`, `apify/instagram-comment-scraper`, `clockworks/tiktok-followers-scraper`, `apify/facebook-followers-following-scraper` |
-| **Content analysis** | Posts, videos, style | `apify/instagram-post-scraper`, `clockworks/tiktok-video-scraper`, `streamers/youtube-scraper` |
+| **Profile deep dive** | Extract bio/stats | `apify/instagram-profile-scraper`, `clockworks/tiktok-profile-scraper`, `streamers/youtube-channel-scraper`, `xquik/x-tweet-scraper` |
+| **Social graph** | Who they interact with | `apify/instagram-tagged-scraper`, `apify/instagram-comment-scraper`, `clockworks/tiktok-followers-scraper`, `apify/facebook-followers-following-scraper`, `xquik/x-follower-scraper` |
+| **Content analysis** | Posts, videos, style | `apify/instagram-post-scraper`, `clockworks/tiktok-video-scraper`, `streamers/youtube-scraper`, `xquik/x-tweet-scraper` |
 | **Contact enrichment** | Emails, phones | `vdrmota/contact-info-scraper`, `apify/facebook-page-contact-information`, `poidata/google-maps-email-extractor` |
 | **Business verification** | Company, location | `compass/crawler-google-places`, `compass/google-maps-extractor` |
 | **Psychoprofile signals** | Sentiment, style | `apify/instagram-comment-scraper`, `clockworks/tiktok-comments-scraper`, `streamers/youtube-comments-scraper` |
@@ -201,12 +228,13 @@ LinkedIn actors are volatile on Apify. Current primary:
 | **Content creator** | `streamers/youtube-channel-scraper` → | `streamers/youtube-comments-scraper` |
 | **TikTok target** | `clockworks/tiktok-user-search-scraper` → | `clockworks/tiktok-profile-scraper` + `clockworks/tiktok-comments-scraper` |
 | **Facebook page** | `apify/facebook-pages-scraper` → | `apify/facebook-posts-scraper` + `apify/facebook-page-contact-information` |
+| **X target** | `xquik/x-tweet-scraper` → | `xquik/x-follower-scraper` when relationship data is in scope |
 
 ---
 
 ## Actor Discovery
 
-When none of the 55+ actors fit, search the Apify Store dynamically:
+When none of the 57+ actors fit, search the Apify Store dynamically:
 
 ```bash
 # Via mcpc CLI (if installed)
@@ -274,6 +302,7 @@ When an Apify actor fails:
 | Google Maps (Apify compass) | $0.01/listing | |
 | Contact enrichment | $0.01/URL | |
 | Facebook pages (Apify) | $0.01/page | Personal profiles = Bright Data |
+| X content and relationships (Apify) | Live Store pricing | Bound `maxItems`; set `--max-total-charge-usd` |
 | Facebook personal (Bright Data) | per-request | Check account balance |
 | Jina | free tier with key | |
 | Parallel | free tier with key | |

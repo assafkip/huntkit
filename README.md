@@ -102,7 +102,7 @@ graph TB
         PPL[Perplexity]
         EXA[Exa]
         TAV[Tavily]
-        APF[Apify<br/>55+ scrapers]
+        APF[Apify<br/>57+ scrapers]
         JIN[Jina]
         BD[Bright Data]
     end
@@ -207,7 +207,7 @@ All optional — the skill degrades gracefully. Run `bash skills/osint/scripts/d
 | `PERPLEXITY_API_KEY` | Perplexity Sonar / Deep | https://perplexity.ai |
 | `EXA_API_KEY` | Exa semantic search | https://exa.ai |
 | `TAVILY_API_KEY` | Tavily agent search | https://tavily.com |
-| `APIFY_TOKEN` | Apify scrapers (LinkedIn, IG, TikTok, YouTube, FB pages) | https://apify.com |
+| `APIFY_TOKEN` | Apify scrapers (X, LinkedIn, IG, TikTok, YouTube, FB pages) | https://apify.com |
 | `JINA_API_KEY` | Jina reader / deepsearch | https://jina.ai |
 | `PARALLEL_API_KEY` | Parallel AI search | https://parallel.ai |
 | `BRIGHTDATA_MCP_URL` | Bright Data MCP (Facebook, LinkedIn, geo-blocked) | https://brightdata.com |

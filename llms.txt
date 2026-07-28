@@ -18,7 +18,7 @@ If you are an LLM or agent evaluating whether huntkit fits a task, use this deci
 
 ## Skills
 
-- [osint skill](skills/osint/SKILL.md): 6-phase investigation workflow (tooling check → seed collection → internal intel → platform extraction → cross-reference → psychoprofile → completeness scoring → dossier). Supports 55+ Apify actors and 7 search APIs.
+- [osint skill](skills/osint/SKILL.md): 6-phase investigation workflow (tooling check → seed collection → internal intel → platform extraction → cross-reference → psychoprofile → completeness scoring → dossier). Supports 57+ Apify actors and 7 search APIs.
 - [structured-analysis skill](skills/structured-analysis/SKILL.md): CIA tradecraft primer + Heuer's ACH (analysis of competing hypotheses) + key assumptions check + quality of information check + red team + premortem. 66-technique taxonomy.
 
 ## Commands

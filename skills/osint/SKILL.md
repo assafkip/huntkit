@@ -12,7 +12,7 @@ description: >
   market research, content generation, or general web scraping tasks.
 ---
 
-# OSINT Skill v3.2
+# OSINT Skill v3.3
 
 Systematic intelligence gathering on individuals. From a name or handle to a scored
 dossier with psychoprofile, career map, and entry points.
@@ -36,7 +36,7 @@ All API keys via environment variables. Never hardcode tokens.
 - `PERPLEXITY_API_KEY` — Perplexity Sonar (fast answers + deep research)
 - `EXA_API_KEY` — Exa AI (semantic search, company/people research, deep research)
 - `TAVILY_API_KEY` — Tavily (agent-optimized search + extract, $0.005/req basic)
-- `APIFY_API_TOKEN` — Apify scraping (LinkedIn, Instagram, Facebook)
+- `APIFY_API_TOKEN`: Apify scraping (X, LinkedIn, Instagram, Facebook)
 - `JINA_API_KEY` — Jina reader/search/deepsearch
 - `PARALLEL_API_KEY` — Parallel AI search
 - `BRIGHTDATA_MCP_URL` — Bright Data MCP endpoint (full URL with token)
@@ -58,7 +58,7 @@ Each script validates env vars, exits with descriptive error + URL to get the ke
 
 **Scraping:**
 - `apify.sh` — `linkedin <url>` | `instagram <handle>` | `run` | `results` | `store-search`
-- `run-actor.sh` — **universal Apify runner (55+ actors).** Embedded from [apify/agent-skills](https://github.com/apify/agent-skills).
+- `run-actor.sh`: **universal Apify runner (57+ actors).** Embedded from [apify/agent-skills](https://github.com/apify/agent-skills).
   Quick answer: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}'`
   Export: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}' --output /tmp/out.csv`
 - `jina.sh` — `read <url>` | `search <query>` | `deepsearch <query>`
@@ -176,6 +176,13 @@ bash skills/osint/scripts/parallel.sh extract "<url>"
 bash skills/osint/scripts/apify.sh linkedin "<url>"
 # Instagram
 bash skills/osint/scripts/apify.sh instagram "<handle>"
+# X public posts and relationship data
+bash skills/osint/scripts/run-actor.sh "xquik/x-tweet-scraper" \
+  '{"mode":"profileTweets","twitterHandles":["handle"],"maxItems":50,"outputVariant":"rich","outputPreset":"nested","fieldStyle":"camelCase"}' \
+  --max-total-charge-usd 0.25
+bash skills/osint/scripts/run-actor.sh "xquik/x-follower-scraper" \
+  '{"twitterHandles":["handle"],"relation":"followers","maxItems":50,"maxItemsPerTarget":50,"outputMode":"compact","includeTargetMetadata":true}' \
+  --max-total-charge-usd 0.25
 # Facebook, заблокированные сайты
 bash skills/osint/scripts/brightdata.sh scrape "<url>"
 ```
@@ -301,7 +308,7 @@ The main agent is the coordinator — it does NOT scrape itself.
 ### Task split pattern:
 - **Agent 1: YouTube/Content** — extract transcripts via Apify (NOT yt-dlp, NOT BrightData — YouTube blocks them). 3-5 videos, speech style, topics. Use `streamers/youtube-channel-scraper` for channel data
 - **Agent 2: Facebook deep** — BrightData scrape: profile, posts, about, photos, friends (use m.facebook.com for more data). For public Pages: `apify/facebook-pages-scraper` + `apify/facebook-page-contact-information`
-- **Agent 3: Social platforms** — Instagram (Apify + tagged/comments scrapers), DOU, company websites, LinkedIn (BrightData). Contact enrichment: `vdrmota/contact-info-scraper` on found websites
+- **Agent 3: Social platforms**: X public content and relationship data (Xquik Actors), Instagram (Apify + tagged/comments scrapers), DOU, company websites, LinkedIn (BrightData). Contact enrichment: `vdrmota/contact-info-scraper` on found websites
 - **Agent 4: TikTok + Regional** — TikTok profile/videos (`clockworks/tiktok-profile-scraper`), local registries, press, university records, Yandex search, Google Maps (`compass/crawler-google-places` if business owner)
 - **Agent 5: Deep research** — Perplexity deep, Exa deep, Parallel deep (if needed)
 
@@ -325,7 +332,7 @@ The main agent is the coordinator — it does NOT scrape itself.
 2. Log available vs missing tools.
 3. Check internal tools: `tg.py` (Telegram history), `himalaya` (email), vault contacts.
 4. If Bright Data unavailable → Facebook and LinkedIn deep scrape limited. Inform user.
-5. If Apify unavailable → Instagram and LinkedIn structured data limited.
+5. If Apify unavailable → X, Instagram, and LinkedIn structured data limited.
 6. Proceed with available toolset.
 
 ## Phase 1: Seed Collection
@@ -438,12 +445,16 @@ Tool priority (primary → fallback). **If primary fails, switch immediately. Ne
 - TikTok discovery: `run-actor.sh "clockworks/tiktok-user-search-scraper"` (find by keywords)
 - YouTube: `run-actor.sh "streamers/youtube-channel-scraper"` → `jina.sh read` → `brightdata.sh scrape`
 - Telegram channels: `web_fetch t.me/s/{channel}` → `jina.sh read`
-- Twitter/X: `python3 scripts/twitter.py tweet <url>` → `jina.sh read`
+- Twitter/X content: `python3 scripts/twitter.py tweet <url>` → `run-actor.sh "xquik/x-tweet-scraper"` → `jina.sh read`
+- Twitter/X relationships: `run-actor.sh "xquik/x-follower-scraper"` for public followers, following, lists, communities, or overlap
 - Google Maps (businesses): `run-actor.sh "compass/crawler-google-places"`
 - Contact enrichment: `run-actor.sh "vdrmota/contact-info-scraper"` (extract emails/phones from any URL)
 - Any site: `jina.sh read` → `brightdata.sh scrape`
 
-**run-actor.sh** = universal Apify runner (embedded, 55+ actors). See `references/tools.md` for full actor catalog.
+**run-actor.sh** = universal Apify runner (embedded, 57+ actors). See `references/tools.md` for full actor catalog.
+
+Use bounded inputs and `--max-total-charge-usd` for both X Actors. Treat public
+connections as leads, not proof of a relationship. Never target protected accounts.
 
 Read `references/tools.md` ONLY when troubleshooting a failed tool.
 
