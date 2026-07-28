@@ -36,7 +36,7 @@ All API keys via environment variables. Never hardcode tokens.
 - `PERPLEXITY_API_KEY` — Perplexity Sonar (fast answers + deep research)
 - `EXA_API_KEY` — Exa AI (semantic search, company/people research, deep research)
 - `TAVILY_API_KEY` — Tavily (agent-optimized search + extract, $0.005/req basic)
-- `APIFY_API_TOKEN` — Apify scraping (X, LinkedIn, Instagram, Facebook)
+- `APIFY_API_TOKEN`: Apify scraping (X, LinkedIn, Instagram, Facebook)
 - `JINA_API_KEY` — Jina reader/search/deepsearch
 - `PARALLEL_API_KEY` — Parallel AI search
 - `BRIGHTDATA_MCP_URL` — Bright Data MCP endpoint (full URL with token)
@@ -58,7 +58,7 @@ Each script validates env vars, exits with descriptive error + URL to get the ke
 
 **Scraping:**
 - `apify.sh` — `linkedin <url>` | `instagram <handle>` | `run` | `results` | `store-search`
-- `run-actor.sh` — **universal Apify runner (57+ actors).** Embedded from [apify/agent-skills](https://github.com/apify/agent-skills).
+- `run-actor.sh`: **universal Apify runner (57+ actors).** Embedded from [apify/agent-skills](https://github.com/apify/agent-skills).
   Quick answer: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}'`
   Export: `bash scripts/run-actor.sh "actor/id" '{"input":"json"}' --output /tmp/out.csv`
 - `jina.sh` — `read <url>` | `search <query>` | `deepsearch <query>`
@@ -308,7 +308,7 @@ The main agent is the coordinator — it does NOT scrape itself.
 ### Task split pattern:
 - **Agent 1: YouTube/Content** — extract transcripts via Apify (NOT yt-dlp, NOT BrightData — YouTube blocks them). 3-5 videos, speech style, topics. Use `streamers/youtube-channel-scraper` for channel data
 - **Agent 2: Facebook deep** — BrightData scrape: profile, posts, about, photos, friends (use m.facebook.com for more data). For public Pages: `apify/facebook-pages-scraper` + `apify/facebook-page-contact-information`
-- **Agent 3: Social platforms** — X public content and relationship data (Xquik Actors), Instagram (Apify + tagged/comments scrapers), DOU, company websites, LinkedIn (BrightData). Contact enrichment: `vdrmota/contact-info-scraper` on found websites
+- **Agent 3: Social platforms**: X public content and relationship data (Xquik Actors), Instagram (Apify + tagged/comments scrapers), DOU, company websites, LinkedIn (BrightData). Contact enrichment: `vdrmota/contact-info-scraper` on found websites
 - **Agent 4: TikTok + Regional** — TikTok profile/videos (`clockworks/tiktok-profile-scraper`), local registries, press, university records, Yandex search, Google Maps (`compass/crawler-google-places` if business owner)
 - **Agent 5: Deep research** — Perplexity deep, Exa deep, Parallel deep (if needed)
 
