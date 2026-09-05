@@ -116,6 +116,19 @@ Last updated: 2026-04-03
 6. Flag any new leads or connections surfaced
 7. Update `memory/investigation-state.md`
 
+**Client-provided document/CSV intake (mandatory order):** any file the client
+hands us -- PDF, DOCX, image, or a leaked/breach-database CSV export -- goes
+through `ingest-client-document.sh` (EV-NNNN registration) then
+`extract-intake.py` (deterministic verbatim extraction) BEFORE any custom
+script touches it. See `.claude/rules/evidence-capture-protocol.md`. For a
+leaked-records CSV specifically (Maltego D4 export, subject identity
+classification into confirmed/flagged/excluded tiers), use the
+`leak-record-classifier` skill (`skills/leak-record-classifier/`)
+instead of writing a classifier from scratch -- it's the shared scaffold two
+prior cases independently reinvented. `evidence-pipeline-guard.py` blocks
+skipping the ingest/extract step for any script written under a case's
+`investigation/evidence/scripts/`.
+
 ---
 
 ## /q-target [name] -- Create or Update Target Profile
@@ -416,6 +429,13 @@ If any gate fails, tell the founder which gate is missing and what to run. Do no
 3. Route to appropriate investigation files
 4. Cross-reference against existing data
 5. Update `memory/investigation-state.md`
+6. Append relationship triples to `memory/graph.jsonl` -- always
+   the INSTANCE KB, never a case folder's `memory/` (local-only, never committed).
+   One JSON object per line, format:
+   `{"s":"<subject>","p":"<predicate>","o":"<object>","t":"YYYY-MM-DD"}`
+   Predicates: `works_at`, `role_is`, `knows`, `communicates_with`, `uses_alias`,
+   `associated_with`, `controls`, `owns`, `targets`, `located_in`.
+   Query by grep: `grep '"s":"<name>"' memory/graph.jsonl`
 
 ---
 

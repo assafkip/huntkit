@@ -460,9 +460,13 @@ function parseAds(domText, queryType, query) {
     const explicitLandingDomains = queryDomain
       ? renderedDomains.filter((line) => line === queryDomain || line.endsWith(`.${queryDomain}`))
       : renderedDomains;
-    const landingDomains = explicitLandingDomains.length
-      ? explicitLandingDomains
-      : (queryDomain ? [queryDomain] : []);
+    // FIX (F-013 correction, 2026-09-04): do NOT default an unconfirmed ad's landing
+    // domain to the searched query domain. Meta's Ad Library keyword search returns
+    // loosely-related results (sometimes hundreds/thousands for an unrelated query), and
+    // assuming every result belongs to the queried domain produced false positives across
+    // 4 domains and 64 ad records in the prior pass (see F-013). An ad with no domain
+    // actually observed in its own rendered text is UNCONFIRMED, not a hit.
+    const landingDomains = explicitLandingDomains;
 
     let creativeText = null;
     if (sponsoredIndex >= 0) {
@@ -482,6 +486,20 @@ function parseAds(domText, queryType, query) {
       creativeText = creativeLines.join("\n").trim() || null;
     }
 
+    // FIX (F-013 correction, part 2, 2026-09-04): a domain search with no explicit
+    // landing-domain match observed in this ad's own rendered text is UNCONFIRMED and
+    // must never be counted as a hit. Part 1 already stopped defaulting landingDomains to
+    // the query domain; this closes the remaining gap, confidence still read "high" off
+    // creativeText/advertiser alone even with an empty landingDomains array, and the ad
+    // was still pushed into the results at all. Per the founder's explicit standard
+    // ("require a DOM-confirmed landing-domain match before counting anything"), a
+    // domain search (queryDomain set) with zero explicit matches is dropped entirely
+    // rather than downgraded, so a caller cannot accidentally count it by ignoring the
+    // confidence field the way the original F-010 report effectively did.
+    const domainConfirmed = !queryDomain || explicitLandingDomains.length > 0;
+    if (!domainConfirmed) {
+      continue;
+    }
     ads.push({
       ad_id: idMatch[1],
       library_id: idMatch[1],
@@ -495,7 +513,7 @@ function parseAds(domText, queryType, query) {
       snapshot_url: `https://www.facebook.com/ads/library/?id=${idMatch[1]}`,
       start_date: explicitStartDate ? explicitStartDate[1].trim() : (rangeStartDate ? rangeStartDate[1].trim() : null),
       status,
-      confidence: advertiser && (creativeText || landingDomains.length) ? "high" : (advertiser ? "medium" : "low"),
+      confidence: advertiser && creativeText ? "high" : (advertiser ? "medium" : "low"),
       missing_fields: [],
     });
   }

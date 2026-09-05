@@ -241,7 +241,15 @@ def block(message):
 
 def warn(message):
     """Output warning as JSON additionalContext (doesn't block)."""
-    print(json.dumps({"additionalContext": message}))
+    # hookEventName is REQUIRED. Claude Code DISCARDS a top-level
+    # additionalContext and also a hookSpecificOutput that carries no
+    # hookEventName -- measured 2026-08-30 with a positive control
+    # (kipi-system probe_hook_envelope.py). Every warning this emitted
+    # was invisible until now; the docs calling the key optional are wrong.
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "additionalContext": message,
+    }}))
     sys.exit(0)
 
 

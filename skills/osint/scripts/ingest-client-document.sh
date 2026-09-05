@@ -14,7 +14,7 @@
 #
 # Flags:
 #   --case <folder>           defaults to active case
-#   --provided-by <who>       e.g. "client (Brad Duplessis)", "Chris Salgado (All Points Investigations)"
+#   --provided-by <who>       e.g. "client (contact name)", "referring investigator (firm)"
 #   --received-date <date>    ISO date we received it (defaults to today)
 #   --note "text"             free-form notes
 #
@@ -209,10 +209,21 @@ cat > "$ITEM_DIR/content.md" <<EOF
 EOF
 
 if [ -n "$EXTRACTED_REL" ]; then
+  EXTRACTED_AT=""
+  EXTRACTOR=""
+  if [ -f "$EXTRACTED_DIR/manifest.json" ]; then
+    EXTRACTED_AT=$(jq -r '.extracted_at // empty' "$EXTRACTED_DIR/manifest.json" 2>/dev/null)
+    EXTRACTOR=$(jq -r '.extractor // empty' "$EXTRACTED_DIR/manifest.json" 2>/dev/null)
+  fi
+  if [ -n "$EXTRACTED_AT" ] && [ -n "$EXTRACTOR" ]; then
+    EXTRACTION_LINE="Text, OCR, and embedded images from this file were extracted on $EXTRACTED_AT by \`$EXTRACTOR\`."
+  else
+    EXTRACTION_LINE="Text, OCR, and embedded images from this file were previously extracted (extraction predates timestamp tracking -- no recorded date/tool)."
+  fi
 cat >> "$ITEM_DIR/content.md" <<EOF
 ## Pre-existing extraction
 
-Text, OCR, and embedded images from this file were extracted on 2026-04-09 by \`scripts/extract_all.py\`. The extracted content lives at:
+$EXTRACTION_LINE The extracted content lives at:
 
 \`$EXTRACTED_REL/\`
 
