@@ -47,6 +47,11 @@ All API keys via environment variables. Never hardcode tokens.
 Run from skill dir: `bash scripts/<name>.sh`.
 Each script validates env vars, exits with descriptive error + URL to get the key.
 
+**Client-provided document intake (do this before any custom extraction script):**
+- `ingest-client-document.sh <file> <slug> <document|screenshot_only> --case <case>` — registers a client-provided file as an EV-NNNN evidence item (SHA-256 + chain-of-custody). See `.claude/rules/evidence-capture-protocol.md`.
+- `extract-intake.py --case <case>` — deterministic verbatim extraction (no LLM, no network) for everything in `investigation/intake/`. Handlers: PDF, DOCX, DOC, CSV, PNG/JPG/TIFF, EML. No `.md` handler yet (markdown intake is already plain text — copy verbatim into `evidence/extracted/<stem>/text.md` by hand if the pipeline guard needs it satisfied).
+- `evidence-pipeline-guard.py` (wired as a hook) blocks writing/running a custom script under a case's `investigation/evidence/scripts/` until both of the above have run for that case's intake. A case-local extraction script should only exist for a genuinely new capability (e.g. platform-specific OCR, a non-portable OS-native OCR engine) — upstream anything generally useful into `extract-intake.py` instead of duplicating the scaffold per case (lesson from the 2026-07-21 extraction-dedup audit: 2 cases had reinvented Maltego-CSV classification, 5 more had reinvented file extraction).
+
 **Search & Research:**
 - `diagnose.sh` — run FIRST. Capability map of all tools.
 - **Perplexity (first-pass default):** when operating through Claude, call the MCP tool `mcp__perplexity-ask__perplexity_ask` directly. It returns an AI answer with citations (equivalent to `sonar` mode). Use the shell script for `search` (ranked web results), `reason` (reconcile contradictions), and `deep` (long-form research) modes, or from bash pipelines.
@@ -844,3 +849,5 @@ Do not claim legal/business entity attribution unless the normalized output cont
 10. Never skip Phase 1.5 (internal intel). Telegram history is often the richest source.
 11. Never quote DMs verbatim in shareable outputs. Summarize and cite.
 12. Never hammer APIs without rate limiting. Stagger requests.
+13. Never treat a redirect/affiliate-marketing domain as isolated without pivoting on its affiliate/tracking/click ID. Extract the ID from the URL or redirect chain and search for every other site or page carrying the same one -- the ID is the operator's fingerprint, not the domain name. (Founder-directed, case-001-example, 2026-09-04.)
+14. Never conclude a page is inert, dormant, or "just a placeholder" from its title or a scan summary alone. Read the actual DOM/rendered source: tracking pixels, third-party ad or affiliate JS, meta-refresh, hidden iframes, and references to other cluster domains all live there and are invisible from the title. (Same origin as #13.)

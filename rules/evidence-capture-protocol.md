@@ -92,8 +92,34 @@ Common failure modes:
 - Chrome headless blocked by a paywall or login wall -- the PDF will be the login page; mark INCOMPLETE and flag
 - URL redirects to a 404 or deleted page -- archive still useful; mark INCOMPLETE if Chrome can't render
 
+## Client-provided documents (CSV, PDF, DOCX, images) -- ingest before you touch them
+
+Every client-provided file goes through TWO existing tools, in order, before any
+custom classification or extraction script is written or run against it:
+
+```
+bash skills/osint/scripts/ingest-client-document.sh <file> <slug> document \
+  --case <case-folder> --provided-by "<who>"
+
+python3 skills/osint/scripts/extract-intake.py --case <case-folder>
+```
+
+The first registers the file as an EV-NNNN item (SHA-256 hash + chain-of-custody).
+The second deterministically extracts verbatim content (text/OCR/CSV rows, no LLM,
+no network) to `investigation/evidence/extracted/<stem>/`. Any downstream
+identity-classification or leak-record analysis is a separate script that reads
+FROM that extracted output, not from a loose copy in `investigation/intake/`.
+
+**Scar (2026-07-21, case-001-example):** a client CSV was copied straight
+into `investigation/intake/` and a bespoke classifier was written and run against
+it directly, skipping both tools entirely even though they already existed and
+were built for exactly this. This was prompt-only enforcement (a rule with no
+hook) -- see `q-system/CLAUDE.md`'s ban on that pattern. Fixed below.
+
 ## Enforcement
 
 Any new investigation case gets the `investigation/evidence/items/` directory scaffolded automatically via `templates/new-investigation/`. The template includes a `README.md` pointing at this protocol.
 
-Any time a Q command (`/q-collect`, `/q-osint`, `/q-intake`, `/q-brief`, `/q-export`) touches evidence, it must route through `capture-evidence.sh` for URL-sourced items. Raw OCR/extraction of client-provided files still happens through existing extraction scripts but the output must land in an `EV-NNNN-<slug>` folder with `source.json` type set to `screenshot_only` (or `document` for non-screenshot docs).
+Any time a Q command (`/q-collect`, `/q-osint`, `/q-intake`, `/q-brief`, `/q-export`) touches evidence, it must route through `capture-evidence.sh` for URL-sourced items.
+
+**Deterministic gate (added 2026-07-21):** `skills/osint/scripts/evidence-pipeline-guard.py`, wired as a PostToolUse hook (Edit/Write/MultiEdit/Bash) in `.claude/settings.json`. It BLOCKS (exit 2) any new or executed script under `investigation/evidence/scripts/` in a case whose `investigation/intake/` contains a file that lacks either a registered EV-NNNN item or a deterministic extraction. No-ops when a case has no document intake at all (pure OSINT collection). Self-test: `python3 skills/osint/scripts/evidence-pipeline-guard.py --self-test`.

@@ -32,7 +32,10 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+
+EXTRACTOR_NAME = "extract-intake.py"
 
 # workspace = workspace (script lives in skills/osint/scripts/)
 WORKSPACE = Path(__file__).resolve().parents[3]
@@ -243,11 +246,111 @@ def extract_csv(path: Path, out: Path) -> dict:
     return {"text_chars": len(text), "images": 0, "rows": row_count, "columns": len(headers)}
 
 
+def extract_eml(path: Path, out: Path) -> dict:
+    """Extract an .eml email: headers, body (plain text, HTML fallback),
+    inline images (OCR'd via the shared multi-PSM pipeline), attachments
+    saved verbatim, and any .docx attachment additionally extracted into
+    its own subdirectory. Ported 2026-07-21 from case-025/case-028's
+    independently-written extract_intake.py -- this capability (email
+    extraction) did not exist in this module until now."""
+    import email
+    import email.policy
+
+    out.mkdir(parents=True, exist_ok=True)
+    images_dir = out / "images"
+    attachments_dir = out / "attachments"
+    images_dir.mkdir(exist_ok=True)
+    attachments_dir.mkdir(exist_ok=True)
+
+    msg = email.message_from_bytes(path.read_bytes(), policy=email.policy.default)
+
+    lines = [f"# {path.name}", "", "## Headers", "",
+             f"- **From:** {msg.get('From', '(none)')}",
+             f"- **To:** {msg.get('To', '(none)')}",
+             f"- **CC:** {msg.get('Cc', '(none)')}",
+             f"- **Date:** {msg.get('Date', '(none)')}",
+             f"- **Subject:** {msg.get('Subject', '(none)')}",
+             "", "## Body", ""]
+
+    body_parts, image_paths, attachment_paths = [], [], []
+    for part in msg.walk():
+        content_type = part.get_content_type()
+        disposition = str(part.get("Content-Disposition", ""))
+
+        if content_type == "text/plain" and "attachment" not in disposition:
+            try:
+                body_parts.append(part.get_content())
+            except Exception as exc:
+                body_parts.append(f"(decode error: {exc})")
+        elif content_type == "text/html" and "attachment" not in disposition and not body_parts:
+            try:
+                html = part.get_content()
+                body_parts.append(f"[HTML body -- first 4000 chars]\n{html[:4000]}")
+            except Exception as exc:
+                body_parts.append(f"(HTML decode error: {exc})")
+        elif content_type.startswith("image/"):
+            ext = content_type.split("/")[-1].split("+")[0]
+            ext = "jpg" if ext == "jpeg" else ext
+            img_path = images_dir / f"image_{len(image_paths) + 1:03d}.{ext}"
+            try:
+                img_path.write_bytes(part.get_payload(decode=True))
+                image_paths.append(img_path)
+            except Exception as exc:
+                print(f"  [warn] inline image failed: {exc}", file=sys.stderr)
+        elif "attachment" in disposition or content_type not in (
+            "text/plain", "text/html", "multipart/mixed",
+            "multipart/alternative", "multipart/related", "multipart/signed",
+        ):
+            filename = part.get_filename()
+            if filename:
+                att_path = attachments_dir / filename
+                try:
+                    att_path.write_bytes(part.get_payload(decode=True))
+                    attachment_paths.append(att_path)
+                except Exception as exc:
+                    print(f"  [warn] attachment {filename} failed: {exc}", file=sys.stderr)
+
+    lines.extend(body_parts if body_parts else ["(no plain-text body found)"])
+    lines.append("")
+    if attachment_paths:
+        lines += ["## Attachments", ""]
+        lines += [f"- `{a.name}` -> `attachments/{a.name}`" for a in attachment_paths]
+        lines.append("")
+    if image_paths:
+        lines += ["## Inline Images", ""]
+        lines += [f"- `{i.name}` -> `images/{i.name}`" for i in image_paths]
+        lines.append("")
+    (out / "text.md").write_text("\n".join(lines), encoding="utf-8")
+
+    ocr_images(out, path, image_paths, "EML inline images")
+
+    for att in attachment_paths:
+        if att.suffix.lower() == ".docx":
+            try:
+                extract_docx(att, attachments_dir / f"{att.stem}_extracted")
+            except Exception as exc:
+                print(f"  [warn] nested docx extract failed for {att.name}: {exc}", file=sys.stderr)
+
+    return {"text_chars": sum(len(b) for b in body_parts), "images": len(image_paths),
+            "attachments": len(attachment_paths)}
+
+
+def extract_md(path: Path, out: Path) -> dict:
+    out.mkdir(parents=True, exist_ok=True)
+    text = path.read_text(encoding="utf-8", errors="replace")
+    write_text_md(out, path, text, "Markdown file, copied verbatim")
+    (out / "ocr.md").write_text(f"# {path.name} -- OCR\n\n_(Markdown file -- no images to OCR)_\n",
+                                encoding="utf-8")
+    return {"text_chars": len(text), "images": 0}
+
+
 HANDLERS = {
     ".pdf": extract_pdf,
     ".docx": extract_docx,
     ".doc": extract_doc,
     ".csv": extract_csv,
+    ".eml": extract_eml,
+    ".md": extract_md,
     ".png": extract_image,
     ".jpg": extract_image,
     ".jpeg": extract_image,
@@ -310,7 +413,9 @@ def main() -> int:
             stats = handler(src, out)
             ocr_kb = (out / "ocr.md").stat().st_size / 1024 if (out / "ocr.md").exists() else 0
             stats.update({"file": src.name, "ext": src.suffix.lower(),
-                          "ocr_bytes": int(ocr_kb * 1024), "status": "OK"})
+                          "ocr_bytes": int(ocr_kb * 1024), "status": "OK",
+                          "extractor": EXTRACTOR_NAME,
+                          "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
             (out / "manifest.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
             print(f"{src.name[:52]:<52} {stats['text_chars']:>8} {stats['images']:>5} "
                   f"{ocr_kb:>7.1f} {'OK':>7}")
